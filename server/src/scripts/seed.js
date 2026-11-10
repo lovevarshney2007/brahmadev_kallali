@@ -40,6 +40,8 @@ if (!s.festivals.length) {
     { name: 'Mahashivratri', when: 'Magh', details: 'Night-long worship, bhajan and jagran.' },
   ];
 }
+if (!s.contact?.person) s.contact.person = 'Maruti kunjatwad';
+if (!s.contact?.phone) s.contact.phone = '9503131031';
 await s.save();
 console.log('Settings ready.');
 

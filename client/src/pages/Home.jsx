@@ -10,7 +10,11 @@ export default function Home() {
   const { settings, summary } = useSite();
   const timings = settings?.darshanTimings || [];
   const festivals = settings?.festivals || [];
-  const c = settings?.contact || {};
+  const c = {
+    person: settings?.contact?.person || 'Maruti kunjatwad',
+    phone: settings?.contact?.phone || '9503131031',
+    email: settings?.contact?.email || '',
+  };
 
   // Fetch latest 6 approved photos for the home gallery preview
   const [galleryPhotos, setGalleryPhotos] = useState([]);
