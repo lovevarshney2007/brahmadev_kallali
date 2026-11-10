@@ -33,7 +33,23 @@ export function createApp() {
       },
     },
   }));
-  app.use(cors({ origin: env.isProd ? false : env.clientUrl, credentials: true }));
+  // Allow frontend origin in production (set CLIENT_URL env var in Vercel backend project)
+  const allowedOrigins = [
+    env.clientUrl,                                       // CLIENT_URL env var
+    'http://localhost:5173',                             // local dev
+    /\.vercel\.app$/,                                    // any vercel preview
+  ].filter(Boolean);
+  app.use(cors({
+    origin: (origin, cb) => {
+      // Allow requests with no origin (mobile, curl, Postman)
+      if (!origin) return cb(null, true);
+      const ok = allowedOrigins.some((o) =>
+        typeof o === 'string' ? o === origin : o.test(origin)
+      );
+      cb(ok ? null : new Error('Not allowed by CORS'), ok);
+    },
+    credentials: true,
+  }));
   app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
   // Razorpay webhook needs the raw body, so it goes before express.json().
