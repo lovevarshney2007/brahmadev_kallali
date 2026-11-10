@@ -21,7 +21,8 @@ export default function Gallery() {
   const [form, setForm] = useState({ caption: '', uploaderName: '', uploaderPhone: '', event: 'General' });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   // Revoke object URL on change/unmount to prevent memory leaks
   useEffect(() => {
@@ -89,7 +90,8 @@ export default function Gallery() {
     if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   }
 
   async function handleUpload(e) {
@@ -269,10 +271,28 @@ export default function Gallery() {
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
                     onDrop={handleDrop}
-                    onClick={() => !file && fileInputRef.current?.click()}
+                    onClick={() => !file && galleryInputRef.current?.click()}
                     style={{ cursor: file ? 'default' : 'pointer' }}
                   >
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/jpg" id="photoUpload" onChange={handleFileChange} hidden />
+                    {/* Native file inputs: gallery picker & direct camera capture */}
+                    <input
+                      ref={galleryInputRef}
+                      type="file"
+                      accept="image/*"
+                      id="galleryUpload"
+                      onChange={handleFileChange}
+                      hidden
+                    />
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      id="cameraUpload"
+                      onChange={handleFileChange}
+                      hidden
+                    />
+
                     {preview ? (
                       <div className="gal-preview-wrap">
                         <img src={preview} alt="Selected preview for upload" className="gal-preview-img" />
@@ -288,12 +308,28 @@ export default function Gallery() {
                             <rect x="22" y="8" width="20" height="6" rx="3" stroke="currentColor" strokeWidth="2.5"/>
                           </svg>
                         </div>
-                        <p className="gal-dz-title">Drag &amp; drop your photo here</p>
-                        <p className="small muted">or tap to choose from your gallery / camera</p>
-                        <button type="button" className="btn primary" style={{ marginTop: '.75rem' }} onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                          Choose Photo
-                        </button>
-                        <p className="small muted" style={{ marginTop: '.5rem' }}>Max 5 MB · JPEG, PNG, WebP</p>
+                        <p className="gal-dz-title">Take a live photo or choose from gallery</p>
+                        <p className="small muted">Upload darshan, aarti or temple moments</p>
+
+                        <div className="gal-action-btns" style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '.85rem' }}>
+                          <button
+                            type="button"
+                            className="btn primary"
+                            onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+                          >
+                            📸 Take with Camera
+                          </button>
+                          <button
+                            type="button"
+                            className="btn secondary"
+                            style={{ borderColor: 'var(--gold)', color: 'var(--fg)', background: 'var(--band)' }}
+                            onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}
+                          >
+                            🖼️ Choose from Gallery
+                          </button>
+                        </div>
+
+                        <p className="small muted" style={{ marginTop: '.65rem' }}>Max 5 MB · JPEG, PNG, WebP</p>
                       </div>
                     )}
                   </div>
