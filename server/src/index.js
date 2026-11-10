@@ -1,13 +1,32 @@
 import { env, razorpayEnabled } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { createApp } from './app.js';
+import { Admin } from './models/Admin.js';
 
-// Connection singleton
+// Connection singleton & auto-seed default admin
 let connected = false;
 async function ensureDB() {
   if (connected) return;
   await connectDB(env.mongoUri);
   connected = true;
+
+  // Ensure default admin exists
+  try {
+    const email = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@brahmadev.org').toLowerCase();
+    const existing = await Admin.findOne({ email });
+    if (!existing) {
+      const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Brahmadev@2026';
+      const passwordHash = await Admin.hashPassword(defaultPassword);
+      await Admin.create({
+        name: 'Temple Trustee',
+        email,
+        passwordHash,
+      });
+      console.log(`Default admin created: ${email}`);
+    }
+  } catch (err) {
+    console.error('Admin auto-seed error:', err);
+  }
 }
 
 const app = createApp();
