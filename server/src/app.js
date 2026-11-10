@@ -83,7 +83,10 @@ export function createApp() {
     }
     const status = err.status || err.statusCode || 500;
     if (status >= 500) console.error(err);
-    res.status(status).json({ error: status >= 500 ? 'Something went wrong on the server. Please try again.' : err.message });
+    res.status(status).json({
+      error: err.message || 'Something went wrong on the server. Please try again.',
+      details: err.stack,
+    });
   });
 
   return app;
