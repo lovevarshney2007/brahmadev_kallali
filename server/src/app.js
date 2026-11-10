@@ -18,7 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp() {
   const app = express();
-  app.set('trust proxy', 1); // behind Render / Railway / Nginx
+  app.set('trust proxy', 1); // behind Render / Railway / Vercel / Nginx
 
   app.use(helmet({
     contentSecurityPolicy: {
@@ -44,9 +44,7 @@ export function createApp() {
   app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }));
-  // Serve uploaded photos statically
-  const uploadsPath = path.resolve(__dirname, '../../public/uploads');
-  app.use('/uploads', express.static(uploadsPath, { maxAge: '7d' }));
+  // Note: local /uploads not used on Vercel — images are stored on Cloudinary
 
   app.use('/api/public', publicRoutes);
   app.use('/api/auth', authRoutes);

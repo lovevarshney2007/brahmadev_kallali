@@ -1,12 +1,9 @@
-import fs from 'node:fs';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Photo } from '../models/Photo.js';
-import { uploadMiddleware } from '../middleware/upload.js';
+import { uploadMiddleware, uploadBuffer, deleteFromCloudinary } from '../middleware/upload.js';
 import { requireAdmin } from '../middleware/auth.js';
-import { cloudinaryEnabled } from '../config/env.js';
-import { uploadToCloudinary, deleteFromCloudinary } from '../services/cloudinary.js';
 
 const router = Router();
 
@@ -48,21 +45,17 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
     return res.status(400).json({ error: 'Please select an image file to upload.' });
   }
 
-  let imageUrl = `/uploads/${req.file.filename}`;
+  let imageUrl = '';
   let publicId = '';
 
-  // If Cloudinary is configured, upload there instead of keeping it local
-  if (cloudinaryEnabled) {
-    try {
-      const result = await uploadToCloudinary(req.file.path);
-      imageUrl = result.imageUrl;
-      publicId = result.publicId;
-      // Clean up local file after cloud upload
-      fs.unlink(req.file.path, () => {});
-    } catch (err) {
-      console.error('Cloudinary upload error:', err);
-      // Fallback to local if cloudinary fails but file is already on disk
-    }
+  try {
+    // Upload buffer directly to Cloudinary (works on Vercel serverless - no disk needed)
+    const result = await uploadBuffer(req.file.buffer, req.file.mimetype);
+    imageUrl = result.imageUrl;
+    publicId = result.publicId;
+  } catch (err) {
+    console.error('Upload error:', err);
+    return res.status(500).json({ error: 'Image upload failed. Please try again.' });
   }
 
   const caption = String(req.body.caption || '').trim().slice(0, 300);

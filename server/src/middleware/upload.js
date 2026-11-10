@@ -1,38 +1,58 @@
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
+import { env, cloudinaryEnabled } from '../config/env.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, '../../public/uploads');
-
-// Ensure directory exists
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Configure Cloudinary
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: env.cloudinary.cloudName,
+    api_key: env.cloudinary.apiKey,
+    api_secret: env.cloudinary.apiSecret,
+  });
 }
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    const uniqueName = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
-    cb(null, uniqueName);
-  },
-});
-
-const fileFilter = (_req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'];
-  if (allowed.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only JPEG, PNG, WEBP and GIF image files are allowed.'));
-  }
-};
-
+// Use memoryStorage so it works on Vercel serverless (no persistent disk)
 export const uploadMiddleware = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per image
+  storage: multer.memoryStorage(),
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, WEBP and GIF image files are allowed.'));
+    }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
+
+/**
+ * Upload a buffer (from memoryStorage) to Cloudinary.
+ * Falls back to a data-URL if Cloudinary is not configured (dev/local only).
+ */
+export async function uploadBuffer(buffer, mimetype) {
+  if (!cloudinaryEnabled) {
+    // Dev fallback: return a base64 data URL (not for production)
+    const b64 = buffer.toString('base64');
+    return { imageUrl: `data:${mimetype};base64,${b64}`, publicId: '' };
+  }
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'brahmadev_gallery', resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve({ imageUrl: result.secure_url, publicId: result.public_id });
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
+export async function deleteFromCloudinary(publicId) {
+  if (!cloudinaryEnabled || !publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (err) {
+    console.error('Cloudinary delete error:', err);
+  }
+}

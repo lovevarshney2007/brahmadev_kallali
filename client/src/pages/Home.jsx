@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
-import { inr } from '../api.js';
+import { inr, api } from '../api.js';
 import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
 
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Mukhed%2C%20Nanded%2C%20Maharashtra';
@@ -10,6 +11,14 @@ export default function Home() {
   const timings = settings?.darshanTimings || [];
   const festivals = settings?.festivals || [];
   const c = settings?.contact || {};
+
+  // Fetch latest 6 approved photos for the home gallery preview
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  useEffect(() => {
+    api('/gallery/public/photos?limit=6').then((data) => {
+      if (data?.items) setGalleryPhotos(data.items);
+    }).catch(() => {});
+  }, []);
 
   return (
     <>
@@ -130,14 +139,33 @@ export default function Home() {
 
       <section className="sec alt" id="gallery">
         <div className="wrap">
-          <SectionHead eyebrow="Photo and video gallery" title="Moments of faith and devotion" />
+          <SectionHead eyebrow="Photo and video gallery" title="Moments of faith and devotion">
+            <p>Devotees share their darshan memories from the temple. <Link to="/gallery">Upload your photo</Link> and it will appear here after approval.</p>
+          </SectionHead>
           <div className="gallery">
-            {['Temple exterior', 'Deity darshan', 'Morning aarti', 'Annual yatra', 'Festival decorations', 'Annadan seva'].map((p) => (
-              <div className="ph" key={p}>{p}</div>
-            ))}
+            {galleryPhotos.length > 0
+              ? galleryPhotos.map((photo) => (
+                  <Link to="/gallery" key={photo.id} className="ph-real" aria-label={photo.caption || `Photo by ${photo.uploaderName}`}>
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.caption || `Temple photo by ${photo.uploaderName}`}
+                      loading="lazy"
+                    />
+                    {photo.caption && <span className="ph-real-cap">{photo.caption}</span>}
+                  </Link>
+                ))
+              : ['Temple exterior', 'Deity darshan', 'Morning aarti', 'Annual yatra', 'Festival decorations', 'Annadan seva'].map((p) => (
+                  <div className="ph" key={p}>{p}</div>
+                ))
+            }
+          </div>
+          <div className="btns">
+            <Link to="/gallery" className="btn primary">View all photos</Link>
+            <Link to="/gallery" className="btn">Share your photo</Link>
           </div>
         </div>
       </section>
+
 
       <section className="sec contact" id="contact">
         <div className="wrap">
