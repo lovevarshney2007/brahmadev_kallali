@@ -6,7 +6,8 @@ import { api, fmtDate } from '../api.js';
 const EVENT_OPTIONS = ['All', 'General', 'Brahmadev Yatra', 'Kartik Utsav', 'Hanuman Jayanti', 'Diwali', 'Guru Purnima', 'Maha Shivaratri'];
 
 export default function Gallery() {
-  const { settings, refresh } = useSite();
+  const { settings, refresh, lang } = useSite();
+  const isMr = lang === 'mr';
   const [tab, setTab] = useState('gallery');
   const [photos, setPhotos] = useState(null);
   const [page, setPage] = useState(1);
@@ -149,9 +150,9 @@ export default function Gallery() {
       {/* Page Hero */}
       <div className="gal-hero">
         <div className="wrap">
-          <span className="eyebrow">Temple Memories</span>
-          <h1>Photo Gallery</h1>
-          <p>Share your darshan moments with the community. Photos are reviewed by the temple trust before appearing here.</p>
+          <span className="eyebrow">{isMr ? "मंदिराच्या आठवणी" : "Temple Memories"}</span>
+          <h1>{isMr ? "छायाचित्र दालन" : "Photo Gallery"}</h1>
+          <p>{isMr ? "दर्शनाचे व उत्सवाचे पावन क्षण सामायिक करा. ट्रस्टच्या पडताळणीनंतर छायाचित्रे येथे प्रसिद्ध केली जातात." : "Share your darshan moments with the community. Photos are reviewed by the temple trust before appearing here."}</p>
         </div>
       </div>
 
@@ -164,7 +165,7 @@ export default function Gallery() {
               aria-selected={tab === 'gallery'}
               onClick={() => setTab('gallery')}
             >
-              <span>🖼️</span> View Gallery
+              <span>🖼️</span> {isMr ? "सर्व छायाचित्रे" : "View Gallery"}
               {photos?.total > 0 && <span className="gal-count">{photos.total}</span>}
             </button>
             <button
@@ -172,7 +173,7 @@ export default function Gallery() {
               aria-selected={tab === 'upload'}
               onClick={() => setTab('upload')}
             >
-              <span>📤</span> Share Your Photo
+              <span>📤</span> {isMr ? "आपले छायाचित्र पाठवा" : "Share Your Photo"}
             </button>
           </div>
         </div>
