@@ -5,10 +5,10 @@ import { useSite } from '../SiteContext.jsx';
 export function Logo({ size = 34 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-      <path d="M20 2l2.5 5h-5z" fill="#F5C542" />
-      <path d="M20 8c-5 6-7 12-8 18h16c-1-6-3-12-8-18z" fill="#D48216" />
-      <rect x="9" y="26" width="22" height="3" fill="#F5C542" />
-      <rect x="7" y="29" width="26" height="9" fill="#F5C542" opacity=".7" />
+      <path d="M20 2l2.5 5h-5z" fill="#F5B041" />
+      <path d="M20 8c-5 6-7 12-8 18h16c-1-6-3-12-8-18z" fill="#E67E22" />
+      <rect x="9" y="26" width="22" height="3" fill="#C88A2E" />
+      <rect x="7" y="29" width="26" height="9" fill="#C88A2E" opacity=".7" />
     </svg>
   );
 }

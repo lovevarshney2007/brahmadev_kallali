@@ -65,7 +65,7 @@ export default function Donate() {
         description: `${isMr ? 'दान' : 'Daan'} · ${purpose}`,
         notes: order.notes,
         prefill: { name: donorName },
-        theme: { color: '#D48216' },
+        theme: { color: '#D35400' },
         handler: async (resp) => {
           try {
             const r = await api('/payments/verify', { method: 'POST', body: resp });
