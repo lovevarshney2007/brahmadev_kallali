@@ -1,0 +1,2 @@
+// Passes errors from async route handlers to Express's error handler.
+export const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
