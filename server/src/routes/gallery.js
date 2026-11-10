@@ -89,7 +89,7 @@ router.post('/public/photos/:id/like', ah(async (req, res) => {
 // ---- ADMIN ROUTES ----
 
 // 4. Admin: Get all photos (pending & approved)
-router.get('/admin/photos', requireAdmin, ah(async (req, res) => {
+router.get(['/admin/photos', '/photos'], requireAdmin, ah(async (req, res) => {
   const statusFilter = req.query.status; // 'pending', 'approved', or all
   const filter = {};
   if (statusFilter === 'pending') filter.approved = false;
@@ -102,7 +102,7 @@ router.get('/admin/photos', requireAdmin, ah(async (req, res) => {
 }));
 
 // 5. Admin: Approve a photo
-router.patch('/admin/photos/:id/approve', requireAdmin, ah(async (req, res) => {
+router.patch(['/admin/photos/:id/approve', '/photos/:id/approve'], requireAdmin, ah(async (req, res) => {
   const photo = await Photo.findByIdAndUpdate(
     req.params.id,
     { approved: true, approvedBy: req.admin._id },
@@ -113,7 +113,7 @@ router.patch('/admin/photos/:id/approve', requireAdmin, ah(async (req, res) => {
 }));
 
 // 6. Admin: Delete / Reject a photo
-router.delete('/admin/photos/:id', requireAdmin, ah(async (req, res) => {
+router.delete(['/admin/photos/:id', '/photos/:id'], requireAdmin, ah(async (req, res) => {
   const photo = await Photo.findByIdAndDelete(req.params.id);
   if (!photo) return res.status(404).json({ error: 'Photo not found.' });
 

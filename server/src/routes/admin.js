@@ -8,6 +8,8 @@ import { getSettings } from '../models/Settings.js';
 import { nextReceiptNo } from '../models/Counter.js';
 import { donationInput, expenseInput, settingsInput, ValidationError } from '../utils/validate.js';
 import { ledgerSummary, pageParams } from '../services/ledger.js';
+import { Photo } from '../models/Photo.js';
+import { deleteFromCloudinary } from '../middleware/upload.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -79,6 +81,40 @@ router.patch('/expenses/:id/void', ah(async (req, res) => {
   );
   if (!e) return res.status(404).json({ error: 'Entry not found.' });
   res.json(e);
+}));
+
+// ---- Photo Moderation ----
+router.get('/photos', ah(async (req, res) => {
+  const statusFilter = req.query.status;
+  const filter = {};
+  if (statusFilter === 'pending') filter.approved = false;
+  if (statusFilter === 'approved') filter.approved = true;
+
+  const items = await Photo.find(filter).sort({ createdAt: -1 }).populate('approvedBy', 'name');
+  const pendingCount = await Photo.countDocuments({ approved: false });
+
+  res.json({ items, pendingCount });
+}));
+
+router.patch('/photos/:id/approve', ah(async (req, res) => {
+  checkId(req.params.id);
+  const photo = await Photo.findByIdAndUpdate(
+    req.params.id,
+    { approved: true, approvedBy: req.admin._id },
+    { new: true }
+  );
+  if (!photo) return res.status(404).json({ error: 'Photo not found.' });
+  res.json(photo);
+}));
+
+router.delete('/photos/:id', ah(async (req, res) => {
+  checkId(req.params.id);
+  const photo = await Photo.findByIdAndDelete(req.params.id);
+  if (!photo) return res.status(404).json({ error: 'Photo not found.' });
+  if (photo.publicId) {
+    await deleteFromCloudinary(photo.publicId);
+  }
+  res.json({ message: 'Photo deleted successfully.' });
 }));
 
 // ---- Site settings ----
