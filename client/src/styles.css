@@ -249,6 +249,8 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .gal-preview-img{width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block}
 .gal-preview-remove{position:absolute;top:.6rem;right:.6rem;background:rgba(20,8,5,.75);border:0;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:grid;place-items:center;transition:background .15s}
 .gal-preview-remove:hover{background:var(--danger)}
+.gal-preview-bar{position:absolute;bottom:.75rem;left:50%;transform:translateX(-50%);display:flex;gap:.5rem;background:rgba(20,8,5,.88);backdrop-filter:blur(6px);padding:.35rem .6rem;border-radius:9999px;border:1px solid rgba(255,215,0,.3);line-height:1}
+.gal-preview-bar .btn{padding:.3rem .65rem;font-size:.8rem}
 
 /* Info cards */
 .gal-upload-info-col{display:grid;gap:1.25rem}

@@ -1,8 +1,16 @@
 // Small robust fetch wrapper with AbortController timeout & credentials
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const rawBase = (import.meta.env.VITE_API_URL || '/api').trim();
+let API_BASE = (!rawBase || rawBase === '/') ? '/api' : rawBase.replace(/\/+$/, '');
+if (!API_BASE.endsWith('/api')) {
+  API_BASE = `${API_BASE}/api`;
+}
 
 export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) {
-  const url = path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/${path}`;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const finalPath = (API_BASE.endsWith('/api') && cleanPath.startsWith('/api/'))
+    ? cleanPath.slice(4)
+    : cleanPath;
+  const url = `${API_BASE}${finalPath}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
 

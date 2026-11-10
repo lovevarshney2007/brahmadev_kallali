@@ -297,6 +297,32 @@ export default function Gallery() {
                       <div className="gal-preview-wrap">
                         <img src={preview} alt="Selected preview for upload" className="gal-preview-img" />
                         <button type="button" className="gal-preview-remove" onClick={(e) => { e.stopPropagation(); removeFile(); }} aria-label="Remove photo">✕</button>
+                        <div className="gal-preview-bar">
+                          <button
+                            type="button"
+                            className="btn small"
+                            aria-label="Retake photo using device camera"
+                            onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+                          >
+                            📸 Retake
+                          </button>
+                          <button
+                            type="button"
+                            className="btn small"
+                            aria-label="Choose another photo from device gallery"
+                            onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}
+                          >
+                            🖼️ Change
+                          </button>
+                          <button
+                            type="button"
+                            className="btn small danger"
+                            aria-label="Remove photo"
+                            onClick={(e) => { e.stopPropagation(); removeFile(); }}
+                          >
+                            ✕ Remove
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="gal-dropzone-inner">
@@ -315,6 +341,7 @@ export default function Gallery() {
                           <button
                             type="button"
                             className="btn primary"
+                            aria-label="Take a photo using device camera"
                             onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
                           >
                             📸 Take with Camera
@@ -322,6 +349,7 @@ export default function Gallery() {
                           <button
                             type="button"
                             className="btn secondary"
+                            aria-label="Choose photo from device gallery"
                             style={{ borderColor: 'var(--gold)', color: 'var(--fg)', background: 'var(--band)' }}
                             onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}
                           >
