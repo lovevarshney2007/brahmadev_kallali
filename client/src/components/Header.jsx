@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 
@@ -28,6 +28,29 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const { settings } = useSite();
   const close = () => setOpen(false);
+
+  // Close mobile navigation on Escape key
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
+  // Lock background scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   return (
     <>
       <header className="site-header">
@@ -36,7 +59,16 @@ export default function Header() {
             <Logo />
             <span><b>Shri Kshetra Brahmadev</b><small>Devasthan · Kallali</small></span>
           </Link>
-          <button className="menu-btn" aria-expanded={open} aria-controls="mainNav" onClick={() => setOpen(!open)}>Menu</button>
+          <button
+            className="menu-btn"
+            aria-expanded={open}
+            aria-controls="mainNav"
+            aria-label="Toggle navigation menu"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? '✕' : 'Menu'}
+          </button>
+          {open && <div className="nav-backdrop" onClick={close} aria-hidden="true" />}
           <nav id="mainNav" className={`site-nav${open ? ' open' : ''}`} aria-label="Main">
             <ul>
               {links.map(([to, label]) => (

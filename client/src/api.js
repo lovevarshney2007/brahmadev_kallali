@@ -1,22 +1,45 @@
-// Small fetch wrapper. Cookies carry the admin session, so credentials are included.
+// Small robust fetch wrapper with AbortController timeout & credentials
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-export async function api(path, { method = 'GET', body } = {}) {
+export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) {
   const url = path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/${path}`;
-  const res = await fetch(url, {
-    method,
-    credentials: 'include',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  let data = null;
-  try { data = await res.json(); } catch { /* empty body */ }
-  if (!res.ok) {
-    const err = new Error(data?.error || `Request failed (${res.status})`);
-    err.status = res.status;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const isFormData = body instanceof FormData;
+    const res = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: isFormData ? undefined : (body ? { 'Content-Type': 'application/json' } : undefined),
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
+      signal: controller.signal,
+    });
+
+    let data = null;
+    try { data = await res.json(); } catch { /* empty body */ }
+
+    if (!res.ok) {
+      const err = new Error(data?.error || `Request failed (${res.status})`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      const timeoutErr = new Error('Connection timed out. Please check your network.');
+      timeoutErr.status = 408;
+      throw timeoutErr;
+    }
+    if (!navigator.onLine) {
+      const offlineErr = new Error('You seem to be offline. Please check your internet connection.');
+      offlineErr.status = 0;
+      throw offlineErr;
+    }
     throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  return data;
 }
 
 export const inr = (n) => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');

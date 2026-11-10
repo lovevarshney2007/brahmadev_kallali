@@ -26,6 +26,10 @@ const donationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for paginated ledger and fast aggregation
+donationSchema.index({ voided: 1, date: -1, createdAt: -1 });
+donationSchema.index({ voided: 1, purpose: 1, amount: 1 });
+
 // What the public is allowed to see.
 donationSchema.methods.toPublic = function toPublic() {
   return {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSite } from '../SiteContext.jsx';
 import { api, inr, UPI_RE } from '../api.js';
@@ -42,7 +43,11 @@ export default function Donate() {
   }, [upi, settings, finalAmount, purpose]);
 
   async function payOnline() {
-    if (!(finalAmount >= 1)) { setStatus({ kind: 'error', text: 'Please choose or enter an amount.' }); return; }
+    if (!(finalAmount >= 1)) {
+      toast.error('Please choose or enter an amount.');
+      setStatus({ kind: 'error', text: 'Please choose or enter an amount.' });
+      return;
+    }
     setBusy(true); setStatus(null);
     try {
       const ok = await loadRazorpay();
@@ -61,19 +66,27 @@ export default function Donate() {
         handler: async (resp) => {
           try {
             const r = await api('/payments/verify', { method: 'POST', body: resp });
-            setStatus(r.receiptNo
-              ? { kind: 'ok', text: `Thank you. Your daan of ${inr(r.amount)} is received. Receipt no. ${r.receiptNo}.` }
-              : { kind: 'ok', text: r.message });
+            const msg = r.receiptNo
+              ? `Thank you. Your daan of ${inr(r.amount)} is received. Receipt no. ${r.receiptNo}.`
+              : r.message;
+            toast.success(msg);
+            setStatus({ kind: 'ok', text: msg });
             refresh();
           } catch (e) {
+            toast.error(e.message);
             setStatus({ kind: 'error', text: e.message });
           }
         },
         modal: { ondismiss: () => setBusy(false) },
       });
-      rzp.on('payment.failed', (r) => setStatus({ kind: 'error', text: `Payment failed: ${r.error?.description || 'please try again.'}` }));
+      rzp.on('payment.failed', (r) => {
+        const msg = `Payment failed: ${r.error?.description || 'please try again.'}`;
+        toast.error(msg);
+        setStatus({ kind: 'error', text: msg });
+      });
       rzp.open();
     } catch (e) {
+      toast.error(e.message);
       setStatus({ kind: 'error', text: e.message });
     } finally {
       setBusy(false);
@@ -81,7 +94,14 @@ export default function Donate() {
   }
 
   const copyUpi = async () => {
-    try { await navigator.clipboard.writeText(upi); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ }
+    try {
+      await navigator.clipboard.writeText(upi);
+      setCopied(true);
+      toast.success('UPI ID copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
   };
 
   return (

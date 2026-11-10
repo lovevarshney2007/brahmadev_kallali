@@ -17,6 +17,10 @@ const expenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for paginated ledger and fast aggregation
+expenseSchema.index({ voided: 1, date: -1, createdAt: -1 });
+expenseSchema.index({ voided: 1, purpose: 1, amount: 1 });
+
 expenseSchema.methods.toPublic = function toPublic() {
   return {
     id: this._id,

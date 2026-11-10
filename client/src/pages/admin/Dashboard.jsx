@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api, inr, fmtDate, today, UPI_RE } from '../../api.js';
 import { useSite } from '../../SiteContext.jsx';
 
@@ -41,14 +42,25 @@ function Donations({ purposes, onChange }) {
     e.preventDefault();
     try {
       const d = await api('/admin/donations', { method: 'POST', body: f });
-      setStatus({ kind: 'ok', text: `Recorded ${inr(d.amount)} — receipt no. ${d.receiptNo}.` });
+      const msg = `Recorded ${inr(d.amount)} — receipt no. ${d.receiptNo}.`;
+      toast.success(msg);
+      setStatus({ kind: 'ok', text: msg });
       setF({ ...blank, date: f.date, source: f.source });
       load(); onChange();
-    } catch (err) { setStatus({ kind: 'error', text: err.message }); }
+    } catch (err) {
+      toast.error(err.message);
+      setStatus({ kind: 'error', text: err.message });
+    }
   }
   async function voidIt(id, reason) {
-    try { await api(`/admin/donations/${id}/void`, { method: 'PATCH', body: { reason } }); load(); onChange(); }
-    catch (err) { setStatus({ kind: 'error', text: err.message }); }
+    try {
+      await api(`/admin/donations/${id}/void`, { method: 'PATCH', body: { reason } });
+      toast.success('Donation entry cancelled.');
+      load(); onChange();
+    } catch (err) {
+      toast.error(err.message);
+      setStatus({ kind: 'error', text: err.message });
+    }
   }
 
   return (
@@ -250,18 +262,26 @@ function GalleryModeration({ onChange }) {
   async function approve(id) {
     try {
       await api(`/admin/photos/${id}/approve`, { method: 'PATCH' });
+      toast.success('Photo approved.');
       setStatus({ kind: 'ok', text: 'Photo approved.' });
       load(); onChange();
-    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) {
+      toast.error(e.message);
+      setStatus({ kind: 'error', text: e.message });
+    }
   }
 
   async function remove(id) {
     if (!window.confirm('Delete this photo permanently?')) return;
     try {
       await api(`/admin/photos/${id}`, { method: 'DELETE' });
+      toast.success('Photo deleted.');
       setStatus({ kind: 'ok', text: 'Photo deleted.' });
       load(); onChange();
-    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) {
+      toast.error(e.message);
+      setStatus({ kind: 'error', text: e.message });
+    }
   }
 
   return (
@@ -282,12 +302,12 @@ function GalleryModeration({ onChange }) {
               <thead><tr><th>Preview</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>{items.map((p) => (
                 <tr key={p._id}>
-                  <td><img src={p.imageUrl} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} /></td>
+                  <td><img src={p.imageUrl} alt={p.caption || `Uploaded by ${p.uploaderName}`} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} /></td>
                   <td>{p.uploaderName}{p.uploaderPhone && <span className="muted small"> · {p.uploaderPhone}</span>}</td>
                   <td>{p.event}</td>
                   <td className="small muted" style={{ maxWidth: 200 }}>{p.caption || '—'}</td>
                   <td>{fmtDate(p.createdAt)}</td>
-                  <td>{p.approved ? <span className="chip" style={{ background: 'var(--ok-bg)', color: 'var(--ok)', borderColor: 'var(--ok)' }}>Approved</span> : <span className="chip" style={{ background: 'var(--warn-bg)', color: 'var(--warn)', borderColor: 'var(--warn)' }}>Pending</span>}</td>
+                  <td>{p.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
                   <td style={{ display: 'flex', gap: '.35rem' }}>
                     {!p.approved && <button className="btn small" onClick={() => approve(p._id)}>Approve</button>}
                     <button className="btn small danger" onClick={() => remove(p._id)}>Delete</button>

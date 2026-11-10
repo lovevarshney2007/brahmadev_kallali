@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../../api.js';
 
 export default function AdminLogin() {
@@ -15,9 +16,12 @@ export default function AdminLogin() {
     setError('');
     try {
       await api('/auth/login', { method: 'POST', body: { email, password } });
+      toast.success('Signed in successfully.');
       navigate('/admin');
     } catch (err) {
-      setError(err.message || 'Email or password is incorrect.');
+      const msg = err.message || 'Email or password is incorrect.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }

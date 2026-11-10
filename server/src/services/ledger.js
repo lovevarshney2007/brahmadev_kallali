@@ -1,6 +1,9 @@
 import { Donation } from '../models/Donation.js';
 import { Expense } from '../models/Expense.js';
 
+let cachedSummary = null;
+let cacheExpiry = 0;
+
 async function totals(Model) {
   const [byPurpose, all] = await Promise.all([
     Model.aggregate([
@@ -22,15 +25,27 @@ async function totals(Model) {
   };
 }
 
-export async function ledgerSummary() {
+export async function ledgerSummary(forceFresh = false) {
+  const now = Date.now();
+  if (!forceFresh && cachedSummary && cacheExpiry > now) {
+    return cachedSummary;
+  }
+
   const [received, spent] = await Promise.all([totals(Donation), totals(Expense)]);
   const last = [received.lastUpdated, spent.lastUpdated].filter(Boolean).sort().pop() || null;
-  return {
+  cachedSummary = {
     received: { total: received.total, count: received.count, byPurpose: received.byPurpose },
     spent: { total: spent.total, count: spent.count, byPurpose: spent.byPurpose },
     balance: received.total - spent.total,
     lastUpdated: last,
   };
+  cacheExpiry = now + 60 * 1000; // 60 seconds TTL cache
+  return cachedSummary;
+}
+
+export function invalidateLedgerCache() {
+  cachedSummary = null;
+  cacheExpiry = 0;
 }
 
 export function pageParams(query, maxLimit = 100) {

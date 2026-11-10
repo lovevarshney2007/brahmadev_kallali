@@ -7,7 +7,7 @@ import { Expense } from '../models/Expense.js';
 import { getSettings } from '../models/Settings.js';
 import { nextReceiptNo } from '../models/Counter.js';
 import { donationInput, expenseInput, settingsInput, ValidationError } from '../utils/validate.js';
-import { ledgerSummary, pageParams } from '../services/ledger.js';
+import { ledgerSummary, pageParams, invalidateLedgerCache } from '../services/ledger.js';
 import { Photo } from '../models/Photo.js';
 import { deleteFromCloudinary } from '../middleware/upload.js';
 
@@ -38,6 +38,7 @@ router.post('/donations', ah(async (req, res) => {
     receiptNo: await nextReceiptNo(data.date),
     createdBy: req.admin._id,
   });
+  invalidateLedgerCache();
   res.status(201).json(donation);
 }));
 
@@ -51,6 +52,7 @@ router.patch('/donations/:id/void', ah(async (req, res) => {
     { new: true }
   );
   if (!d) return res.status(404).json({ error: 'Entry not found.' });
+  invalidateLedgerCache();
   res.json(d);
 }));
 
@@ -67,6 +69,7 @@ router.get('/expenses', ah(async (req, res) => {
 
 router.post('/expenses', ah(async (req, res) => {
   const expense = await Expense.create({ ...expenseInput(req.body), createdBy: req.admin._id });
+  invalidateLedgerCache();
   res.status(201).json(expense);
 }));
 
@@ -80,6 +83,7 @@ router.patch('/expenses/:id/void', ah(async (req, res) => {
     { new: true }
   );
   if (!e) return res.status(404).json({ error: 'Entry not found.' });
+  invalidateLedgerCache();
   res.json(e);
 }));
 

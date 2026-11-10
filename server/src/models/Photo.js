@@ -16,6 +16,10 @@ const photoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for fast retrieval and sorting
+photoSchema.index({ approved: 1, createdAt: -1 });
+photoSchema.index({ approved: 1, event: 1, createdAt: -1 });
+
 // Format output for public visitors
 photoSchema.methods.toPublic = function toPublic() {
   return {

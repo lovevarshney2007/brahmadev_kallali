@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { useSite } from '../SiteContext.jsx';
 import { api, fmtDate } from '../api.js';
 
@@ -14,7 +15,6 @@ export default function Gallery() {
   const [error, setError] = useState('');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState(null);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -22,6 +22,29 @@ export default function Gallery() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Revoke object URL on change/unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  // Lightbox keyboard navigation (Escape, ArrowLeft, ArrowRight)
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setLightboxOpen(false);
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxIndex((i) => (i - 1 + (photos?.items?.length || 1)) % (photos?.items?.length || 1));
+      } else if (e.key === 'ArrowRight') {
+        setLightboxIndex((i) => (i + 1) % (photos?.items?.length || 1));
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, photos]);
 
   const fetchPhotos = async (pageNum = 1) => {
     setLoading(true); setError('');
@@ -32,6 +55,7 @@ export default function Gallery() {
       setPhotos(data);
     } catch (e) {
       setError(e.message || 'Could not load photos.');
+      toast.error(e.message || 'Could not load photos.');
     } finally {
       setLoading(false);
     }
@@ -42,11 +66,17 @@ export default function Gallery() {
   function handleFileChange(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type.startsWith('image/')) { setUploadStatus({ kind: 'error', text: 'Please select an image file.' }); return; }
-    if (f.size > 10 * 1024 * 1024) { setUploadStatus({ kind: 'error', text: 'Image must be smaller than 10 MB.' }); return; }
+    if (!f.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (JPEG, PNG, WebP).');
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      toast.error('Image must be smaller than 5 MB.');
+      return;
+    }
+    if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-    setUploadStatus(null);
   }
 
   function handleDrop(e) {
@@ -56,6 +86,7 @@ export default function Gallery() {
   }
 
   function removeFile() {
+    if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -63,9 +94,15 @@ export default function Gallery() {
 
   async function handleUpload(e) {
     e.preventDefault();
-    if (!file) { setUploadStatus({ kind: 'error', text: 'Please select a photo first.' }); return; }
-    if (!form.uploaderName.trim()) { setUploadStatus({ kind: 'error', text: 'Please enter your name.' }); return; }
-    setBusy(true); setUploadStatus(null);
+    if (!file) {
+      toast.error('Please select a photo first.');
+      return;
+    }
+    if (!form.uploaderName.trim()) {
+      toast.error('Please enter your name.');
+      return;
+    }
+    setBusy(true);
     try {
       const formData = new FormData();
       formData.append('photo', file);
@@ -73,16 +110,18 @@ export default function Gallery() {
       formData.append('uploaderName', form.uploaderName);
       formData.append('uploaderPhone', form.uploaderPhone);
       formData.append('event', form.event);
-      const baseUrl = import.meta.env.VITE_API_URL || '/api';
-      const res = await fetch(`${baseUrl}/gallery/public/photos/upload`, { method: 'POST', credentials: 'include', body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      setUploadStatus({ kind: 'ok', text: data.message || 'Photo submitted successfully! It will appear after approval.' });
+
+      const res = await api('/gallery/public/photos/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      toast.success(res.message || 'Photo submitted successfully! It will appear after moderation.');
       removeFile();
       setForm({ caption: '', uploaderName: '', uploaderPhone: '', event: 'General' });
       refresh();
     } catch (err) {
-      setUploadStatus({ kind: 'error', text: err.message });
+      toast.error(err.message || 'Upload failed. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -182,13 +221,18 @@ export default function Gallery() {
               <div className="photo-grid" role="list">
                 {photos.items.map((photo, idx) => (
                   <figure key={photo.id} className="photo-card" role="listitem" onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}>
-                    <img src={photo.imageUrl} alt={photo.caption || `Photo by ${photo.uploaderName}`} loading="lazy" className="photo-img" />
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.caption || `Darshan photo uploaded by ${photo.uploaderName}`}
+                      loading="lazy"
+                      className="photo-img"
+                    />
                     <figcaption className="photo-caption">
                       {photo.caption && <span className="cap-text">{photo.caption}</span>}
                       <div className="photo-meta">
                         <span>🙏 {photo.uploaderName}</span>
                         {photo.event !== 'General' && <span className="event-tag">{photo.event}</span>}
-                        <button className="like-btn" onClick={(e) => { e.stopPropagation(); likePhoto(photo.id, idx); }} aria-label={`Like`}>
+                        <button className="like-btn" onClick={(e) => { e.stopPropagation(); likePhoto(photo.id, idx); }} aria-label={`Like photo`}>
                           ♡ {photo.likes}
                         </button>
                       </div>
@@ -228,10 +272,10 @@ export default function Gallery() {
                     onClick={() => !file && fileInputRef.current?.click()}
                     style={{ cursor: file ? 'default' : 'pointer' }}
                   >
-                    <input ref={fileInputRef} type="file" accept="image/*" id="photoUpload" onChange={handleFileChange} hidden />
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/jpg" id="photoUpload" onChange={handleFileChange} hidden />
                     {preview ? (
                       <div className="gal-preview-wrap">
-                        <img src={preview} alt="Preview" className="gal-preview-img" />
+                        <img src={preview} alt="Selected preview for upload" className="gal-preview-img" />
                         <button type="button" className="gal-preview-remove" onClick={(e) => { e.stopPropagation(); removeFile(); }} aria-label="Remove photo">✕</button>
                       </div>
                     ) : (
@@ -249,7 +293,7 @@ export default function Gallery() {
                         <button type="button" className="btn primary" style={{ marginTop: '.75rem' }} onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
                           Choose Photo
                         </button>
-                        <p className="small muted" style={{ marginTop: '.5rem' }}>Max 10 MB · JPEG, PNG, WebP, GIF</p>
+                        <p className="small muted" style={{ marginTop: '.5rem' }}>Max 5 MB · JPEG, PNG, WebP</p>
                       </div>
                     )}
                   </div>
@@ -302,12 +346,6 @@ export default function Gallery() {
                       />
                     </div>
 
-                    {uploadStatus && (
-                      <div className={`status ${uploadStatus.kind}`} role="status">
-                        {uploadStatus.kind === 'ok' ? '✅ ' : '⚠️ '}{uploadStatus.text}
-                      </div>
-                    )}
-
                     <button className="btn primary" type="submit" disabled={busy} style={{ width: '100%', justifyContent: 'center' }}>
                       {busy ? '⏳ Uploading…' : '🙏 Submit for Approval'}
                     </button>
@@ -356,11 +394,11 @@ export default function Gallery() {
       {/* LIGHTBOX */}
       {lightboxOpen && currentPhoto && (
         <div className="lightbox" onClick={() => setLightboxOpen(false)} role="dialog" aria-modal="true" aria-label="Photo view">
-          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">✕</button>
-          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i - 1 + photos.items.length) % photos.items.length); }} aria-label="Previous">‹</button>
-          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i + 1) % photos.items.length); }} aria-label="Next">›</button>
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close photo view">✕</button>
+          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i - 1 + photos.items.length) % photos.items.length); }} aria-label="Previous photo">‹</button>
+          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i + 1) % photos.items.length); }} aria-label="Next photo">›</button>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={currentPhoto.imageUrl} alt={currentPhoto.caption || ''} />
+            <img src={currentPhoto.imageUrl} alt={currentPhoto.caption || `Photo by ${currentPhoto.uploaderName}`} />
             <div className="lightbox-info">
               <p>{currentPhoto.caption || <span className="muted">No caption</span>}</p>
               <div className="lightbox-meta">

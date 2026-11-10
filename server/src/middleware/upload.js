@@ -11,7 +11,7 @@ if (cloudinaryEnabled) {
   });
 }
 
-// Use memoryStorage so it works on Vercel serverless (no persistent disk)
+// 5 MB max to protect serverless memory heap
 export const uploadMiddleware = multer({
   storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb) => {
@@ -22,12 +22,12 @@ export const uploadMiddleware = multer({
       cb(new Error('Only JPEG, PNG, WEBP and GIF image files are allowed.'));
     }
   },
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
 /**
  * Upload a buffer (from memoryStorage) to Cloudinary.
- * Falls back to a data-URL if Cloudinary is not configured (dev/local only).
+ * Applies automatic WebP/AVIF formatting, quality compression, and 1600px dimension ceiling.
  */
 export async function uploadBuffer(buffer, mimetype) {
   if (!cloudinaryEnabled) {
@@ -38,7 +38,13 @@ export async function uploadBuffer(buffer, mimetype) {
 
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'brahmadev_gallery', resource_type: 'image' },
+      {
+        folder: 'brahmadev_gallery',
+        resource_type: 'image',
+        transformation: [
+          { width: 1600, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' },
+        ],
+      },
       (error, result) => {
         if (error) return reject(error);
         resolve({ imageUrl: result.secure_url, publicId: result.public_id });

@@ -4,6 +4,7 @@ import { ah } from '../utils/asyncHandler.js';
 import { Photo } from '../models/Photo.js';
 import { uploadMiddleware, uploadBuffer, deleteFromCloudinary } from '../middleware/upload.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { photoUploadInput } from '../utils/validate.js';
 
 const router = Router();
 
@@ -45,6 +46,9 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
     return res.status(400).json({ error: 'Please select an image file to upload.' });
   }
 
+  // Validate form body with Zod schema before hitting Cloudinary
+  const input = photoUploadInput(req.body);
+
   let imageUrl = '';
   let publicId = '';
 
@@ -58,18 +62,13 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
     return res.status(500).json({ error: 'Image upload failed. Please try again.' });
   }
 
-  const caption = String(req.body.caption || '').trim().slice(0, 300);
-  const uploaderName = String(req.body.uploaderName || '').trim().slice(0, 120) || 'Devotee';
-  const uploaderPhone = String(req.body.uploaderPhone || '').trim().slice(0, 20);
-  const event = String(req.body.event || 'General').trim().slice(0, 100);
-
   const photo = await Photo.create({
     imageUrl,
     publicId,
-    caption,
-    uploaderName,
-    uploaderPhone,
-    event,
+    caption: input.caption,
+    uploaderName: input.uploaderName,
+    uploaderPhone: input.uploaderPhone,
+    event: input.event,
     approved: false, // Pending admin moderation
   });
 
