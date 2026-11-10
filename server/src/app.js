@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
+import { ensureDB } from './config/db.js';
 import publicRoutes from './routes/public.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
@@ -60,7 +61,17 @@ export function createApp() {
   app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }));
-  // Note: local /uploads not used on Vercel — images are stored on Cloudinary
+
+  // Ensure DB connection for all API routes (Vercel Serverless)
+  app.use('/api', async (_req, res, next) => {
+    try {
+      await ensureDB();
+      next();
+    } catch (err) {
+      console.error('DB Connection Middleware Error:', err);
+      res.status(500).json({ error: 'Database connection failed' });
+    }
+  });
 
   app.use('/api/public', publicRoutes);
   app.use('/api/auth', authRoutes);
@@ -83,10 +94,7 @@ export function createApp() {
     }
     const status = err.status || err.statusCode || 500;
     if (status >= 500) console.error(err);
-    res.status(status).json({
-      error: err.message || 'Something went wrong on the server. Please try again.',
-      details: err.stack,
-    });
+    res.status(status).json({ error: status >= 500 ? 'Something went wrong on the server. Please try again.' : err.message });
   });
 
   return app;
