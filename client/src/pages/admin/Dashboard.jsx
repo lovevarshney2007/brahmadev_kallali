@@ -242,81 +242,157 @@ function SiteSettings({ onChange }) {
 
 function GalleryModeration({ onChange }) {
   const [status, setStatus] = useState(null);
-  const [items, setItems] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('pending'); // 'pending' | 'approved' | 'all'
+  const [mediaTab, setMediaTab] = useState('photos'); // 'photos' | 'videos'
+  const [photoItems, setPhotoItems] = useState(null);
+  const [videoItems, setVideoItems] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('pending');
+  const [photoPendingCount, setPhotoPendingCount] = useState(0);
+  const [videoPendingCount, setVideoPendingCount] = useState(0);
 
-  const load = useCallback(async () => {
+  const loadPhotos = useCallback(async () => {
     try {
       const data = await api(`/admin/photos?status=${statusFilter === 'all' ? '' : statusFilter}`);
-      setItems(data.items);
-      if (data.pendingCount !== undefined) setPendingCount(data.pendingCount);
+      setPhotoItems(data.items);
+      if (data.pendingCount !== undefined) setPhotoPendingCount(data.pendingCount);
     } catch (e) {
       setStatus({ kind: 'error', text: e.message });
     }
   }, [statusFilter]);
 
-  const [pendingCount, setPendingCount] = useState(0);
+  const loadVideos = useCallback(async () => {
+    try {
+      const data = await api(`/gallery/admin/videos?status=${statusFilter === 'all' ? '' : statusFilter}`);
+      setVideoItems(data.items);
+      if (data.pendingCount !== undefined) setVideoPendingCount(data.pendingCount);
+    } catch (e) {
+      setStatus({ kind: 'error', text: e.message });
+    }
+  }, [statusFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadPhotos(); }, [loadPhotos]);
+  useEffect(() => { loadVideos(); }, [loadVideos]);
 
-  async function approve(id) {
+  async function approvePhoto(id) {
     try {
       await api(`/admin/photos/${id}/approve`, { method: 'PATCH' });
       toast.success('Photo approved.');
       setStatus({ kind: 'ok', text: 'Photo approved.' });
-      load(); onChange();
-    } catch (e) {
-      toast.error(e.message);
-      setStatus({ kind: 'error', text: e.message });
-    }
+      loadPhotos(); onChange();
+    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
   }
 
-  async function remove(id) {
+  async function removePhoto(id) {
     if (!window.confirm('Delete this photo permanently?')) return;
     try {
       await api(`/admin/photos/${id}`, { method: 'DELETE' });
       toast.success('Photo deleted.');
       setStatus({ kind: 'ok', text: 'Photo deleted.' });
-      load(); onChange();
-    } catch (e) {
-      toast.error(e.message);
-      setStatus({ kind: 'error', text: e.message });
-    }
+      loadPhotos(); onChange();
+    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+  }
+
+  async function approveVideo(id) {
+    try {
+      await api(`/gallery/admin/videos/${id}/approve`, { method: 'PATCH' });
+      toast.success('Video approved.');
+      setStatus({ kind: 'ok', text: 'Video approved.' });
+      loadVideos(); onChange();
+    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+  }
+
+  async function removeVideo(id) {
+    if (!window.confirm('Delete this video permanently?')) return;
+    try {
+      await api(`/gallery/admin/videos/${id}`, { method: 'DELETE' });
+      toast.success('Video deleted.');
+      setStatus({ kind: 'ok', text: 'Video deleted.' });
+      loadVideos(); onChange();
+    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
   }
 
   return (
     <div className="prose">
+      {/* Media sub-tabs */}
+      <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button
+          className={`btn small${mediaTab === 'photos' ? ' primary' : ''}`}
+          onClick={() => setMediaTab('photos')}
+        >
+          🖼️ Photos {photoPendingCount > 0 && <span className="gal-count">{photoPendingCount}</span>}
+        </button>
+        <button
+          className={`btn small${mediaTab === 'videos' ? ' primary' : ''}`}
+          onClick={() => setMediaTab('videos')}
+        >
+          🎬 Videos {videoPendingCount > 0 && <span className="gal-count">{videoPendingCount}</span>}
+        </button>
+      </div>
+
       <div className="panel">
         <div className="panel-head">
-          <h3>Gallery Moderation</h3>
+          <h3>{mediaTab === 'photos' ? 'Photo' : 'Video'} Moderation</h3>
           <div className="btns">
-            <label className="check small"><input type="radio" name="gf" checked={statusFilter === 'pending'} onChange={() => setStatusFilter('pending')} /> Pending ({pendingCount})</label>
+            <label className="check small"><input type="radio" name="gf" checked={statusFilter === 'pending'} onChange={() => setStatusFilter('pending')} /> Pending</label>
             <label className="check small"><input type="radio" name="gf" checked={statusFilter === 'approved'} onChange={() => setStatusFilter('approved')} /> Approved</label>
             <label className="check small"><input type="radio" name="gf" checked={statusFilter === 'all'} onChange={() => setStatusFilter('all')} /> All</label>
           </div>
         </div>
         <Status s={status} />
-        <div className="tablebox">
-          {!items ? <div className="empty">Loading…</div> : !items.length ? <div className="empty">No photos in this category.</div> : (
-            <table>
-              <thead><tr><th>Preview</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>{items.map((p) => (
-                <tr key={p._id}>
-                  <td><img src={p.imageUrl} alt={p.caption || `Uploaded by ${p.uploaderName}`} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} /></td>
-                  <td>{p.uploaderName}{p.uploaderPhone && <span className="muted small"> · {p.uploaderPhone}</span>}</td>
-                  <td>{p.event}</td>
-                  <td className="small muted" style={{ maxWidth: 200 }}>{p.caption || '—'}</td>
-                  <td>{fmtDate(p.createdAt)}</td>
-                  <td>{p.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
-                  <td style={{ display: 'flex', gap: '.35rem' }}>
-                    {!p.approved && <button className="btn small" onClick={() => approve(p._id)}>Approve</button>}
-                    <button className="btn small danger" onClick={() => remove(p._id)}>Delete</button>
-                  </td>
-                </tr>
-              ))}</tbody>
-            </table>
-          )}
-        </div>
+
+        {/* PHOTOS TABLE */}
+        {mediaTab === 'photos' && (
+          <div className="tablebox">
+            {!photoItems ? <div className="empty">Loading…</div> : !photoItems.length ? <div className="empty">No photos in this category.</div> : (
+              <table>
+                <thead><tr><th>Preview</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>{photoItems.map((p) => (
+                  <tr key={p._id}>
+                    <td><img src={p.imageUrl} alt={p.caption || `Uploaded by ${p.uploaderName}`} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} /></td>
+                    <td>{p.uploaderName}{p.uploaderPhone && <span className="muted small"> · {p.uploaderPhone}</span>}</td>
+                    <td>{p.event}</td>
+                    <td className="small muted" style={{ maxWidth: 200 }}>{p.caption || '—'}</td>
+                    <td>{fmtDate(p.createdAt)}</td>
+                    <td>{p.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
+                    <td style={{ display: 'flex', gap: '.35rem' }}>
+                      {!p.approved && <button className="btn small" onClick={() => approvePhoto(p._id)}>Approve</button>}
+                      <button className="btn small danger" onClick={() => removePhoto(p._id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {/* VIDEOS TABLE */}
+        {mediaTab === 'videos' && (
+          <div className="tablebox">
+            {!videoItems ? <div className="empty">Loading…</div> : !videoItems.length ? <div className="empty">No videos in this category.</div> : (
+              <table>
+                <thead><tr><th>Preview</th><th>Uploader</th><th>Event</th><th>Caption</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>{videoItems.map((v) => (
+                  <tr key={v._id}>
+                    <td>
+                      {v.thumbnailUrl
+                        ? <img src={v.thumbnailUrl} alt="video thumbnail" style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 6 }} />
+                        : <video src={v.videoUrl} style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 6 }} muted playsInline />
+                      }
+                    </td>
+                    <td>{v.uploaderName}{v.uploaderPhone && <span className="muted small"> · {v.uploaderPhone}</span>}</td>
+                    <td>{v.event}</td>
+                    <td className="small muted" style={{ maxWidth: 200 }}>{v.caption || '—'}</td>
+                    <td>{fmtDate(v.createdAt)}</td>
+                    <td>{v.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
+                    <td style={{ display: 'flex', gap: '.35rem' }}>
+                      {!v.approved && <button className="btn small" onClick={() => approveVideo(v._id)}>Approve</button>}
+                      <button className="btn small danger" onClick={() => removeVideo(v._id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

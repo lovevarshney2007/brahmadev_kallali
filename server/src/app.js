@@ -14,6 +14,7 @@ import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import paymentRoutes, { webhookHandler } from './routes/payments.js';
 import galleryRoutes from './routes/gallery.js';
+import videoRoutes from './routes/videos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,6 +79,7 @@ export function createApp() {
   app.use('/api/admin', adminRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/gallery', galleryRoutes);
+  app.use('/api/gallery', videoRoutes);
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
   // In production, Express also serves the built React app.

@@ -4,6 +4,7 @@ const photoSchema = new mongoose.Schema(
   {
     imageUrl: { type: String, required: true },
     publicId: { type: String, default: '' }, // For cloud storage deletion
+    fileHash: { type: String, default: '', index: { sparse: true } }, // SHA-256 hash for duplicate detection
     caption: { type: String, maxlength: 300, default: '' },
     uploaderName: { type: String, maxlength: 120, default: 'Devotee' },
     uploaderPhone: { type: String, maxlength: 20, default: '' }, // Private admin use only

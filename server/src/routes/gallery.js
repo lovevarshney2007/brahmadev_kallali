@@ -2,7 +2,12 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Photo } from '../models/Photo.js';
-import { uploadMiddleware, uploadBuffer, deleteFromCloudinary } from '../middleware/upload.js';
+import {
+  uploadMiddleware,
+  uploadBuffer,
+  deleteFromCloudinary,
+  computeHash,
+} from '../middleware/upload.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { photoUploadInput } from '../utils/validate.js';
 
@@ -40,7 +45,7 @@ router.get('/public/photos', ah(async (req, res) => {
   });
 }));
 
-// 2. Public: Upload photo from mobile/gallery
+// 2. Public: Upload photo from mobile/gallery (with duplicate detection)
 router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('photo'), ah(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Please select an image file to upload.' });
@@ -48,6 +53,15 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
 
   // Validate form body with Zod schema before hitting Cloudinary
   const input = photoUploadInput(req.body);
+
+  // --- Duplicate detection: reject if another photo with same SHA-256 hash exists ---
+  const fileHash = computeHash(req.file.buffer);
+  const existing = await Photo.findOne({ fileHash });
+  if (existing) {
+    return res.status(409).json({
+      error: 'This photo has already been uploaded. Please choose a different image.',
+    });
+  }
 
   let imageUrl = '';
   let publicId = '';
@@ -65,6 +79,7 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
   const photo = await Photo.create({
     imageUrl,
     publicId,
+    fileHash,
     caption: input.caption,
     uploaderName: input.uploaderName,
     uploaderPhone: input.uploaderPhone,
@@ -118,7 +133,7 @@ router.delete(['/admin/photos/:id', '/photos/:id'], requireAdmin, ah(async (req,
 
   // Also delete from Cloudinary if publicId exists
   if (photo.publicId) {
-    await deleteFromCloudinary(photo.publicId);
+    await deleteFromCloudinary(photo.publicId, 'image');
   }
 
   res.json({ message: 'Photo deleted successfully.' });

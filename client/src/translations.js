@@ -110,11 +110,11 @@ export const translations = {
     gallery: {
       eyebrow: "Photo and video gallery",
       title: "Moments of faith and devotion",
-      desc1: "Devotees share their darshan memories from the temple. ",
-      descLink: "Upload your photo",
+      desc1: "Devotees share their darshan memories and videos from the temple. ",
+      descLink: "Share your photo or video",
       desc2: " and it will appear here after approval.",
-      viewAll: "View all photos",
-      sharePhoto: "Share your photo",
+      viewAll: "Open complete gallery",
+      sharePhoto: "Upload photo or video",
     },
 
     // Contact Section
@@ -302,11 +302,11 @@ export const translations = {
     gallery: {
       eyebrow: "छायाचित्र व व्हिडिओ दालन",
       title: "भक्ती आणि दर्शनाचे पावन क्षण",
-      desc1: "भाविक दर्शनाचे क्षण येथे सामायिक करतात. ",
-      descLink: "आपले छायाचित्र अपलोड करा",
-      desc2: "; मंजुरीनंतर ते येथे दिसेल.",
-      viewAll: "सर्व छायाचित्रे पहा",
-      sharePhoto: "आपले छायाचित्र पाठवा",
+      desc1: "भाविक दर्शनाचे क्षण व व्हिडिओ येथे सामायिक करतात. ",
+      descLink: "फोटो किंवा व्हिडिओ अपलोड करा",
+      desc2: "; ट्रस्टच्या मंजुरीनंतर ते येथे दिसेल.",
+      viewAll: "संपूर्ण दालन पहा",
+      sharePhoto: "फोटो / व्हिडिओ पाठवा",
     },
 
     // Contact Section

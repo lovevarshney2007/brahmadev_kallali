@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
-import { inr, api } from '../api.js';
+import { inr, api, fmtDate } from '../api.js';
 import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
 
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Mukhed%2C%20Nanded%2C%20Maharashtra';
@@ -16,13 +16,65 @@ export default function Home() {
     email: settings?.contact?.email || '',
   };
 
-  // Fetch latest 6 approved photos for the home gallery preview
+  // Fetch all approved photos and videos for the home page
   const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [galleryVideos, setGalleryVideos] = useState([]);
+  const [activeMediaTab, setActiveMediaTab] = useState('all'); // 'all' | 'photos' | 'videos'
+
+  // Lightboxes for Home page
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [videoLightboxOpen, setVideoLightboxOpen] = useState(false);
+  const [videoLightboxIndex, setVideoLightboxIndex] = useState(0);
+
   useEffect(() => {
-    api('/gallery/public/photos?limit=6').then((data) => {
+    api('/gallery/public/photos?limit=100').then((data) => {
       if (data?.items) setGalleryPhotos(data.items);
     }).catch(() => {});
+    api('/gallery/public/videos?limit=100').then((data) => {
+      if (data?.items) setGalleryVideos(data.items);
+    }).catch(() => {});
   }, []);
+
+  // Keyboard navigation for lightboxes
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      else if (e.key === 'ArrowLeft') setLightboxIndex((i) => (i - 1 + (galleryPhotos.length || 1)) % (galleryPhotos.length || 1));
+      else if (e.key === 'ArrowRight') setLightboxIndex((i) => (i + 1) % (galleryPhotos.length || 1));
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, galleryPhotos]);
+
+  useEffect(() => {
+    if (!videoLightboxOpen) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setVideoLightboxOpen(false);
+      else if (e.key === 'ArrowLeft') setVideoLightboxIndex((i) => (i - 1 + (galleryVideos.length || 1)) % (galleryVideos.length || 1));
+      else if (e.key === 'ArrowRight') setVideoLightboxIndex((i) => (i + 1) % (galleryVideos.length || 1));
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [videoLightboxOpen, galleryVideos]);
+
+  async function likePhoto(id, idx) {
+    try {
+      const res = await api(`/gallery/public/photos/${id}/like`, { method: 'POST' });
+      setGalleryPhotos((prev) => prev.map((p, i) => i === idx ? { ...p, likes: res.likes } : p));
+    } catch {}
+  }
+
+  async function likeVideo(id, idx) {
+    try {
+      const res = await api(`/gallery/public/videos/${id}/like`, { method: 'POST' });
+      setGalleryVideos((prev) => prev.map((v, i) => i === idx ? { ...v, likes: res.likes } : v));
+    } catch {}
+  }
+
+  const currentPhoto = galleryPhotos[lightboxIndex];
+  const currentVideo = galleryVideos[videoLightboxIndex];
 
   return (
     <>
@@ -146,28 +198,140 @@ export default function Home() {
       <section className="sec alt" id="gallery">
         <div className="wrap">
           <SectionHead eyebrow={t.gallery.eyebrow} title={t.gallery.title}>
-            <p>{t.gallery.desc1}<Link to="/gallery">{t.gallery.descLink}</Link>{t.gallery.desc2}</p>
+            <p>{t.gallery.desc1}<Link to="/gallery?tab=upload">{t.gallery.descLink}</Link>{t.gallery.desc2}</p>
           </SectionHead>
-          <div className="gallery">
-            {galleryPhotos.length > 0
-              ? galleryPhotos.map((photo) => (
-                  <Link to="/gallery" key={photo.id} className="ph-real" aria-label={photo.caption || `Photo by ${photo.uploaderName}`}>
-                    <img
-                      src={photo.imageUrl}
-                      alt={photo.caption || `Temple photo by ${photo.uploaderName}`}
-                      loading="lazy"
-                    />
-                    {photo.caption && <span className="ph-real-cap">{photo.caption}</span>}
-                  </Link>
-                ))
-              : ['Temple exterior', 'Deity darshan', 'Morning aarti', 'Annual yatra', 'Festival decorations', 'Annadan seva'].map((p) => (
-                  <div className="ph" key={p}>{p}</div>
-                ))
-            }
+
+          {/* Media Filter Tabs */}
+          <div className="media-type-toggle" style={{ margin: '0 auto', maxWidth: '100%', overflowX: 'auto' }}>
+            <button
+              type="button"
+              className={`media-toggle-btn${activeMediaTab === 'all' ? ' active' : ''}`}
+              onClick={() => setActiveMediaTab('all')}
+            >
+              🌟 All ({galleryPhotos.length + galleryVideos.length})
+            </button>
+            <button
+              type="button"
+              className={`media-toggle-btn${activeMediaTab === 'photos' ? ' active' : ''}`}
+              onClick={() => setActiveMediaTab('photos')}
+            >
+              🖼️ Photos ({galleryPhotos.length})
+            </button>
+            <button
+              type="button"
+              className={`media-toggle-btn${activeMediaTab === 'videos' ? ' active' : ''}`}
+              onClick={() => setActiveMediaTab('videos')}
+            >
+              🎬 Videos ({galleryVideos.length})
+            </button>
           </div>
-          <div className="btns">
+
+          {/* Photos Block */}
+          {(activeMediaTab === 'all' || activeMediaTab === 'photos') && (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
+                <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                  <span>🖼️</span> {settings?.lang === 'mr' ? 'सर्व छायाचित्रे' : 'Photo Gallery'}
+                  <span className="gal-count">{galleryPhotos.length}</span>
+                </h3>
+                <Link to="/gallery" className="btn small">{t.gallery.viewAll}</Link>
+              </div>
+
+              {galleryPhotos.length > 0 ? (
+                <div className="photo-grid" role="list">
+                  {galleryPhotos.map((photo, idx) => (
+                    <figure
+                      key={photo.id}
+                      className="photo-card"
+                      role="listitem"
+                      onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img src={photo.imageUrl} alt={photo.caption || `Temple photo by ${photo.uploaderName}`} loading="lazy" className="photo-img" />
+                      <figcaption className="photo-caption">
+                        {photo.caption && <span className="cap-text">{photo.caption}</span>}
+                        <div className="photo-meta">
+                          <span>🙏 {photo.uploaderName}</span>
+                          {photo.event !== 'General' && <span className="event-tag">{photo.event}</span>}
+                          <button
+                            className="like-btn"
+                            onClick={(e) => { e.stopPropagation(); likePhoto(photo.id, idx); }}
+                            aria-label="Like photo"
+                          >
+                            ♡ {photo.likes}
+                          </button>
+                        </div>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              ) : (
+                <div className="gal-empty" style={{ padding: '2rem 1rem' }}>
+                  <div className="gal-empty-icon">🖼️</div>
+                  <p>No photos yet.</p>
+                  <Link to="/gallery?tab=upload" className="btn primary small">Upload a photo</Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Videos Block */}
+          {(activeMediaTab === 'all' || activeMediaTab === 'videos') && (
+            <div style={{ display: 'grid', gap: '1rem', marginTop: activeMediaTab === 'all' ? '1.5rem' : '0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
+                <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                  <span>🎬</span> {settings?.lang === 'mr' ? 'व्हिडिओ दर्शन' : 'Video Gallery'}
+                  <span className="gal-count">{galleryVideos.length}</span>
+                </h3>
+                <Link to="/gallery?tab=videos" className="btn small">View all videos</Link>
+              </div>
+
+              {galleryVideos.length > 0 ? (
+                <div className="video-grid" role="list">
+                  {galleryVideos.map((video, idx) => (
+                    <figure
+                      key={video.id}
+                      className="video-card"
+                      role="listitem"
+                      onClick={() => { setVideoLightboxIndex(idx); setVideoLightboxOpen(true); }}
+                    >
+                      <div className="video-thumb-wrap">
+                        {video.thumbnailUrl
+                          ? <img src={video.thumbnailUrl} alt={video.caption || `Video by ${video.uploaderName}`} loading="lazy" className="video-thumb" />
+                          : <div className="video-thumb-placeholder">🎬</div>
+                        }
+                        <div className="video-play-btn" aria-hidden="true">▶</div>
+                      </div>
+                      <figcaption className="photo-caption">
+                        {video.caption && <span className="cap-text">{video.caption}</span>}
+                        <div className="photo-meta">
+                          <span>🙏 {video.uploaderName}</span>
+                          {video.event !== 'General' && <span className="event-tag">{video.event}</span>}
+                          <button
+                            className="like-btn"
+                            onClick={(e) => { e.stopPropagation(); likeVideo(video.id, idx); }}
+                            aria-label="Like video"
+                          >
+                            ♡ {video.likes}
+                          </button>
+                        </div>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              ) : (
+                <div className="gal-empty" style={{ padding: '2rem 1rem' }}>
+                  <div className="gal-empty-icon">🎬</div>
+                  <p>No videos yet.</p>
+                  <Link to="/gallery?tab=upload" className="btn primary small">Upload a video</Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.5rem' }}>
             <Link to="/gallery" className="btn primary">{t.gallery.viewAll}</Link>
-            <Link to="/gallery" className="btn">{t.gallery.sharePhoto}</Link>
+            <Link to="/gallery?tab=upload" className="btn">{t.gallery.sharePhoto}</Link>
           </div>
         </div>
       </section>
@@ -198,6 +362,52 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── PHOTO LIGHTBOX ─────────────────────────────────── */}
+      {lightboxOpen && currentPhoto && (
+        <div className="lightbox" onClick={() => setLightboxOpen(false)} role="dialog" aria-modal="true" aria-label="Photo view">
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">✕</button>
+          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i - 1 + galleryPhotos.length) % galleryPhotos.length); }} aria-label="Previous">‹</button>
+          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i + 1) % galleryPhotos.length); }} aria-label="Next">›</button>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={currentPhoto.imageUrl} alt={currentPhoto.caption || `Photo by ${currentPhoto.uploaderName}`} />
+            <div className="lightbox-info">
+              <p>{currentPhoto.caption || <span className="muted">No caption</span>}</p>
+              <div className="lightbox-meta">
+                <span>🙏 {currentPhoto.uploaderName}</span>
+                {currentPhoto.event !== 'General' && <span className="event-tag">{currentPhoto.event}</span>}
+                <span className="muted">{fmtDate(currentPhoto.createdAt)}</span>
+              </div>
+              <button className="like-btn" style={{ marginTop: '.5rem', fontSize: '1.1rem' }} onClick={() => likePhoto(currentPhoto.id, lightboxIndex)}>
+                ♡ {currentPhoto.likes} likes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIDEO LIGHTBOX ─────────────────────────────────── */}
+      {videoLightboxOpen && currentVideo && (
+        <div className="lightbox" onClick={() => setVideoLightboxOpen(false)} role="dialog" aria-modal="true" aria-label="Video view">
+          <button className="lightbox-close" onClick={() => setVideoLightboxOpen(false)} aria-label="Close">✕</button>
+          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setVideoLightboxIndex((i) => (i - 1 + galleryVideos.length) % galleryVideos.length); }} aria-label="Previous">‹</button>
+          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setVideoLightboxIndex((i) => (i + 1) % galleryVideos.length); }} aria-label="Next">›</button>
+          <div className="lightbox-content lightbox-video-content" onClick={(e) => e.stopPropagation()}>
+            <video src={currentVideo.videoUrl} controls autoPlay className="lightbox-video" />
+            <div className="lightbox-info">
+              <p>{currentVideo.caption || <span className="muted">No caption</span>}</p>
+              <div className="lightbox-meta">
+                <span>🙏 {currentVideo.uploaderName}</span>
+                {currentVideo.event !== 'General' && <span className="event-tag">{currentVideo.event}</span>}
+                <span className="muted">{fmtDate(currentVideo.createdAt)}</span>
+              </div>
+              <button className="like-btn" style={{ marginTop: '.5rem', fontSize: '1.1rem' }} onClick={() => likeVideo(currentVideo.id, videoLightboxIndex)}>
+                ♡ {currentVideo.likes} likes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

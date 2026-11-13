@@ -115,3 +115,20 @@ export function photoUploadInput(body) {
   if (!res.success) throw new ValidationError(formatZodError(res.error));
   return res.data;
 }
+
+// 5. Video Upload Form Schema (same fields as photo)
+const videoUploadZod = z.object({
+  uploaderName: z.string().trim().max(120).default('Devotee'),
+  uploaderPhone: z.string().trim().max(20).refine((v) => !v || PHONE_RE.test(v), {
+    message: 'Please enter a valid phone number.',
+  }).default(''),
+  caption: z.string().trim().max(300).default(''),
+  event: z.string().trim().max(100).default('General'),
+});
+
+export function videoUploadInput(body) {
+  const res = videoUploadZod.safeParse(body);
+  if (!res.success) throw new ValidationError(formatZodError(res.error));
+  return res.data;
+}
+
