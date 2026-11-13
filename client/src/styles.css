@@ -252,13 +252,29 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .gal-upload-svg{width:72px;height:72px;color:var(--gold);margin-bottom:.25rem}
 .gal-dz-title{font-size:1.05rem;font-weight:600;color:var(--fg);margin:0}
 
-/* Preview */
-.gal-preview-wrap{position:relative;line-height:0}
-.gal-preview-img{width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block}
-.gal-preview-remove{position:absolute;top:.6rem;right:.6rem;background:rgba(20,8,5,.75);border:0;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:grid;place-items:center;transition:background .15s}
-.gal-preview-remove:hover{background:var(--danger)}
-.gal-preview-bar{position:absolute;bottom:.75rem;left:50%;transform:translateX(-50%);display:flex;gap:.5rem;background:rgba(20,8,5,.88);backdrop-filter:blur(6px);padding:.35rem .6rem;border-radius:9999px;border:1px solid rgba(255,215,0,.3);line-height:1}
-.gal-preview-bar .btn{padding:.3rem .65rem;font-size:.8rem}
+/* ── Dedicated Upload Edit & Review Card ── */
+.upload-edit-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.4rem;display:grid;gap:1.25rem;box-shadow:0 8px 24px -10px rgba(0,0,0,.08)}
+.upload-edit-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-bottom:.85rem;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.upload-edit-title{font-family:var(--display);font-size:1.2rem;color:var(--heading);margin:0;display:flex;align-items:center;gap:.5rem}
+.upload-media-box{background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.15);display:flex;justify-content:center;align-items:center}
+.upload-media-video{width:100%;aspect-ratio:16/9;max-height:400px;display:block;background:#000}
+.upload-media-img{width:100%;max-height:360px;object-fit:contain;display:block;background:var(--band)}
+.upload-media-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 1rem;background:var(--band);border:1px solid var(--line);border-radius:10px;flex-wrap:wrap}
+.upload-file-info{display:flex;align-items:center;gap:.5rem;font-size:.88rem;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.upload-toolbar-actions{display:flex;gap:.5rem;align-items:center}
+.upload-error-banner{background:var(--danger-bg);border:1px solid var(--danger);color:var(--danger);padding:.75rem 1rem;border-radius:10px;font-size:.92rem;display:flex;align-items:center;gap:.5rem}
+
+/* ── In-page Auspicious Success Screen (replaces toast popup) ── */
+.upload-success-card{background:var(--card);border:2px solid var(--gold);border-radius:18px;padding:2.5rem 1.8rem;text-align:center;display:grid;gap:1.4rem;justify-items:center;box-shadow:0 12px 40px -12px rgba(200,138,46,.25);animation:fadeIn .25s ease}
+.upload-success-icon-wrap{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:var(--maroon-2);display:grid;place-items:center;font-size:2.4rem;box-shadow:0 6px 20px -4px rgba(245,176,65,.5)}
+.upload-success-headings{display:grid;gap:.5rem;max-width:55ch}
+.upload-success-headings h2{font-family:var(--display);font-size:1.6rem;color:var(--heading);margin:0}
+.upload-success-headings p{color:var(--muted);font-size:1rem;margin:0}
+.upload-summary-box{width:100%;max-width:480px;background:var(--band);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;text-align:left;display:grid;gap:.6rem}
+.upload-summary-row{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem;border-bottom:1px dashed var(--line);padding-bottom:.4rem}
+.upload-summary-row:last-child{border-bottom:none;padding-bottom:0}
+.upload-summary-label{color:var(--muted)}
+.upload-summary-val{font-weight:600;color:var(--fg);text-align:right}
 
 /* Info cards */
 .gal-upload-info-col{display:grid;gap:1.25rem}

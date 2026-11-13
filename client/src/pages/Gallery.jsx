@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useSite } from '../SiteContext.jsx';
 import { api, fmtDate } from '../api.js';
@@ -17,6 +18,15 @@ export default function Gallery() {
   // ── Tab state: 'photos' | 'videos' | 'upload' ──────────────
   const [tab, setTab] = useState('photos');
   const [uploadType, setUploadType] = useState('photo'); // 'photo' | 'video'
+
+  // ── Read ?tab= from URL ───────────────────────────────────
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const t = p.get('tab');
+    if (t === 'videos' || t === 'upload' || t === 'photos') {
+      setTab(t);
+    }
+  }, []);
 
   // ── Photos ──────────────────────────────────────────────────
   const [photos, setPhotos] = useState(null);
@@ -46,6 +56,8 @@ export default function Gallery() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [form, setForm] = useState({ caption: '', uploaderName: '', uploaderPhone: '', event: 'General' });
+  const [uploadSuccessData, setUploadSuccessData] = useState(null);
+  const [uploadError, setUploadError] = useState('');
 
   // Track fingerprints of files submitted this session to prevent exact same re-upload
   const submittedFingerprints = useRef(new Set());
@@ -120,23 +132,24 @@ export default function Gallery() {
   function handleFileChange(e) {
     const f = e.target.files?.[0];
     if (!f) return;
+    setUploadError('');
 
     if (uploadType === 'photo') {
       if (!f.type.startsWith('image/')) {
-        toast.error('Please select a valid image file (JPEG, PNG, WebP).');
+        setUploadError(isMr ? 'कृपया योग्य फोटो फाईल निवडा (JPEG, PNG, WebP).' : 'Please select a valid image file (JPEG, PNG, WebP).');
         return;
       }
       if (f.size > 5 * 1024 * 1024) {
-        toast.error('Image must be smaller than 5 MB.');
+        setUploadError(isMr ? 'फोटोचा आकार ५ MB पेक्षा लहान असावा.' : 'Image must be smaller than 5 MB.');
         return;
       }
     } else {
       if (!f.type.startsWith('video/')) {
-        toast.error('Please select a valid video file (MP4, MOV, WebM).');
+        setUploadError(isMr ? 'कृपया योग्य व्हिडिओ फाईल निवडा (MP4, MOV, WebM).' : 'Please select a valid video file (MP4, MOV, WebM).');
         return;
       }
       if (f.size > 100 * 1024 * 1024) {
-        toast.error('Video must be smaller than 100 MB.');
+        setUploadError(isMr ? 'व्हिडिओचा आकार १०० MB पेक्षा लहान असावा.' : 'Video must be smaller than 100 MB.');
         return;
       }
     }
@@ -154,34 +167,43 @@ export default function Gallery() {
 
   function removeFile() {
     if (preview) URL.revokeObjectURL(preview);
-    setFile(null); setPreview(null);
+    setFile(null);
+    setPreview(null);
+    setUploadError('');
     if (galleryInputRef.current) galleryInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
     if (videoInputRef.current) videoInputRef.current.value = '';
   }
 
+  function resetUpload() {
+    removeFile();
+    setUploadSuccessData(null);
+    setForm({ caption: '', uploaderName: '', uploaderPhone: '', event: 'General' });
+  }
+
   // Switch upload type — also clear selected file
   function switchUploadType(type) {
-    removeFile();
+    resetUpload();
     setUploadType(type);
   }
 
-  // ── Upload handler ───────────────────────────────────────────
+  // ── Upload handler (In-page success & error, NO green toast popup) ──
   async function handleUpload(e) {
     e.preventDefault();
+    setUploadError('');
     if (!file) {
-      toast.error(`Please select a ${uploadType} first.`);
+      setUploadError(isMr ? `कृपया आधी ${uploadType === 'video' ? 'व्हिडिओ' : 'फोटो'} निवडा.` : `Please select a ${uploadType} first.`);
       return;
     }
     if (!form.uploaderName.trim()) {
-      toast.error('Please enter your name.');
+      setUploadError(isMr ? 'कृपया आपले नाव प्रविष्ट करा.' : 'Please enter your name.');
       return;
     }
 
     // Client-side duplicate guard (same session)
     const fp = fileFingerprint(file);
     if (submittedFingerprints.current.has(fp)) {
-      toast.error('You already uploaded this file. Please choose a different one.');
+      setUploadError(isMr ? 'आपण ही फाईल आधीच पाठवली आहे. कृपया दुसरी फाईल निवडा.' : 'You already uploaded this file. Please choose a different one.');
       return;
     }
 
@@ -199,20 +221,28 @@ export default function Gallery() {
         : '/gallery/public/videos/upload';
 
       const res = await api(endpoint, { method: 'POST', body: formData, timeout: 90000 });
-      toast.success(res.message || 'Submitted successfully! It will appear after moderation.');
 
       // Remember this file so user can't re-submit the same one
       submittedFingerprints.current.add(fp);
 
-      removeFile();
-      setForm({ caption: '', uploaderName: '', uploaderPhone: '', event: 'General' });
+      // INSTEAD OF GREEN TOAST POPUP, SHOW DEDICATED IN-PAGE SUCCESS SCREEN
+      setUploadSuccessData({
+        type: uploadType,
+        uploaderName: form.uploaderName,
+        event: form.event,
+        caption: form.caption,
+        fileName: file.name,
+        fileSize: (file.size / (1024 * 1024)).toFixed(1),
+        message: res.message || (isMr ? 'आपला व्हिडिओ यशस्वीरीत्या प्राप्त झाला!' : 'Dhanyawad! Media received successfully.'),
+      });
+
       refresh();
     } catch (err) {
       // 409 = duplicate detected server-side
       if (err.status === 409) {
-        toast.error(err.message || 'This file was already uploaded. Please choose a different one.');
+        setUploadError(err.message || (isMr ? 'ही फाईल आधीच अपलोड झाली आहे. कृपया दुसरी फाईल निवडा.' : 'This file was already uploaded. Please choose a different one.'));
       } else {
-        toast.error(err.message || 'Upload failed. Please try again.');
+        setUploadError(err.message || (isMr ? 'अपलोड अयशस्वी झाले. कृपया पुन्हा प्रयत्न करा.' : 'Upload failed. Please try again.'));
       }
     } finally {
       setBusy(false);
@@ -419,153 +449,391 @@ export default function Gallery() {
       {tab === 'upload' && (
         <section className="sec" style={{ paddingTop: '2rem' }}>
           <div className="wrap">
-            <div className="gal-upload-layout">
-              {/* Left: Form */}
-              <div className="gal-upload-form-col">
+            {/* Hidden native file inputs */}
+            <input ref={galleryInputRef} type="file" accept="image/*" id="galleryUpload" onChange={handleFileChange} hidden />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" id="cameraUpload" onChange={handleFileChange} hidden />
+            <input ref={videoInputRef} type="file" accept="video/*" id="videoUpload" onChange={handleFileChange} hidden />
 
-                {/* Media type toggle */}
-                <div className="media-type-toggle">
-                  <button
-                    type="button"
-                    className={`media-toggle-btn${uploadType === 'photo' ? ' active' : ''}`}
-                    onClick={() => switchUploadType('photo')}
-                  >
-                    🖼️ Upload Photo
-                  </button>
-                  <button
-                    type="button"
-                    className={`media-toggle-btn${uploadType === 'video' ? ' active' : ''}`}
-                    onClick={() => switchUploadType('video')}
-                  >
-                    🎬 Upload Video
-                  </button>
+            {/* 1. IN-PAGE SUCCESS SCREEN (NO POPUP) */}
+            {uploadSuccessData ? (
+              <div className="upload-success-card">
+                <div className="upload-success-icon-wrap" aria-hidden="true">
+                  🙏
+                </div>
+                <div className="upload-success-headings">
+                  <span className="eyebrow" style={{ color: 'var(--saffron)' }}>
+                    {isMr ? 'धन्यवाद · पावन क्षण प्राप्त झाले' : 'Dhanyawad · Media Received'}
+                  </span>
+                  <h2>
+                    {uploadSuccessData.type === 'video'
+                      ? (isMr ? 'आपला व्हिडिओ यशस्वीरीत्या सादर झाला आहे!' : 'Video Submitted Successfully!')
+                      : (isMr ? 'आपले छायाचित्र यशस्वीरीत्या सादर झाले आहे!' : 'Photo Submitted Successfully!')
+                    }
+                  </h2>
+                  <p>
+                    {isMr
+                      ? 'आपला व्हिडिओ/फोटो मंदिर ट्रस्टकडे पडताळणीसाठी पाठवण्यात आला आहे. ट्रस्टच्या मान्यतेनंतर तो वेबसाइटवर प्रसिद्ध केला जाईल.'
+                      : 'Your media has been received and sent to the temple trust for review. It will appear on the website once approved.'}
+                  </p>
                 </div>
 
-                <form onSubmit={handleUpload}>
+                {/* Summary Box */}
+                <div className="upload-summary-box">
+                  <div className="upload-summary-row">
+                    <span className="upload-summary-label">{isMr ? 'माध्यम' : 'Media'}</span>
+                    <span className="upload-summary-val">{uploadSuccessData.type === 'video' ? '🎬 Video' : '🖼️ Photo'}</span>
+                  </div>
+                  <div className="upload-summary-row">
+                    <span className="upload-summary-label">{isMr ? 'नाव' : 'Devotee'}</span>
+                    <span className="upload-summary-val">🙏 {uploadSuccessData.uploaderName}</span>
+                  </div>
+                  <div className="upload-summary-row">
+                    <span className="upload-summary-label">{isMr ? 'प्रसंग / उत्सव' : 'Occasion'}</span>
+                    <span className="upload-summary-val">{uploadSuccessData.event}</span>
+                  </div>
+                  {uploadSuccessData.caption && (
+                    <div className="upload-summary-row">
+                      <span className="upload-summary-label">{isMr ? 'कॅप्शन' : 'Caption'}</span>
+                      <span className="upload-summary-val" style={{ maxWidth: '65%' }}>{uploadSuccessData.caption}</span>
+                    </div>
+                  )}
+                  <div className="upload-summary-row">
+                    <span className="upload-summary-label">{isMr ? 'स्थिती' : 'Status'}</span>
+                    <span className="upload-summary-val" style={{ color: 'var(--warn)' }}>⏳ {isMr ? 'पडताळणी प्रलंबित' : 'Pending Trust Moderation'}</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="btns" style={{ justifyContent: 'center', marginTop: '.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={() => {
+                      resetUpload();
+                    }}
+                  >
+                    {uploadSuccessData.type === 'video'
+                      ? (isMr ? '🎬 आणखी एक व्हिडिओ पाठवा' : '🎬 Upload Another Video')
+                      : (isMr ? '🖼️ आणखी एक फोटो पाठवा' : '🖼️ Upload Another Photo')
+                    }
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      const targetTab = uploadSuccessData.type === 'video' ? 'videos' : 'photos';
+                      resetUpload();
+                      setTab(targetTab);
+                    }}
+                  >
+                    {isMr ? 'दालन पहा' : 'View Gallery'}
+                  </button>
+                  <Link to="/" className="btn light" style={{ borderColor: 'var(--line)', color: 'var(--fg)' }}>
+                    {isMr ? 'मुख्यपृष्ठ' : 'Go to Home'}
+                  </Link>
+                </div>
+              </div>
+            ) : file ? (
+              /* 2. DEDICATED EDIT & REVIEW SCREEN (AFTER FILE SELECTION) */
+              <div className="gal-upload-layout">
+                <div className="upload-edit-card">
+                  <div className="upload-edit-header">
+                    <div className="upload-edit-title">
+                      <span>{uploadType === 'video' ? '🎬' : '🖼️'}</span>
+                      <span>
+                        {uploadType === 'video'
+                          ? (isMr ? 'व्हिडिओ माहिती व सबमिशन' : 'Review & Submit Video')
+                          : (isMr ? 'छायाचित्र माहिती व सबमिशन' : 'Review & Submit Photo')
+                        }
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn small"
+                      onClick={removeFile}
+                      style={{ borderColor: 'var(--line)', color: 'var(--muted)' }}
+                    >
+                      ← {isMr ? 'दुसरी फाईल निवडा' : 'Choose different file'}
+                    </button>
+                  </div>
+
+                  {/* Clean Media Player (No overlapping buttons over video controls!) */}
+                  <div className="upload-media-box">
+                    {uploadType === 'video' ? (
+                      <video
+                        src={preview}
+                        controls
+                        playsInline
+                        className="upload-media-video"
+                      />
+                    ) : (
+                      <img
+                        src={preview}
+                        alt="Selected preview"
+                        className="upload-media-img"
+                      />
+                    )}
+                  </div>
+
+                  {/* Dedicated Toolbar directly below player */}
+                  <div className="upload-media-toolbar">
+                    <div className="upload-file-info" title={file.name}>
+                      <span>{uploadType === 'video' ? '📹' : '📷'}</span>
+                      <span style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.name}</span>
+                      <span className="muted">({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                    </div>
+                    <div className="upload-toolbar-actions">
+                      {uploadType === 'photo' && (
+                        <button
+                          type="button"
+                          className="btn small"
+                          onClick={() => cameraInputRef.current?.click()}
+                        >
+                          📸 Retake
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn small"
+                        onClick={() => (uploadType === 'video' ? videoInputRef : galleryInputRef).current?.click()}
+                      >
+                        🔄 {isMr ? 'बदला' : 'Change'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn small danger"
+                        onClick={removeFile}
+                      >
+                        🗑️ {isMr ? 'काढून टाका' : 'Remove'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* In-page Error Banner */}
+                  {uploadError && (
+                    <div className="upload-error-banner" role="alert">
+                      <span>⚠️</span>
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
+
+                  {/* Form Inputs */}
+                  <form onSubmit={handleUpload} className="gal-fields" style={{ padding: 0, border: 'none', background: 'none' }}>
+                    <div className="field">
+                      <label htmlFor="uploaderName">
+                        {isMr ? 'आपले नाव' : 'Your Name'} <span style={{ color: 'var(--danger)' }}>*</span>
+                      </label>
+                      <input
+                        id="uploaderName"
+                        type="text"
+                        value={form.uploaderName}
+                        onChange={(e) => setForm({ ...form, uploaderName: e.target.value })}
+                        placeholder={isMr ? 'उदा. पाटील परिवार' : 'e.g. Patil Family'}
+                        maxLength={120}
+                        required
+                      />
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="uploaderPhone">
+                        {isMr ? 'फोन / व्हॉट्सॲप' : 'Phone / WhatsApp'}{' '}
+                        <span className="muted small">({isMr ? 'केवळ मंदिर कार्यालयासाठी खाजगी' : 'private, for temple office only'})</span>
+                      </label>
+                      <input
+                        id="uploaderPhone"
+                        type="tel"
+                        value={form.uploaderPhone}
+                        onChange={(e) => setForm({ ...form, uploaderPhone: e.target.value })}
+                        placeholder="e.g. 9876543210"
+                        maxLength={20}
+                        inputMode="tel"
+                      />
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="uploadEvent">
+                        {isMr ? 'प्रसंग / उत्सव' : 'Event / Occasion'}
+                      </label>
+                      <select
+                        id="uploadEvent"
+                        value={form.event}
+                        onChange={(e) => setForm({ ...form, event: e.target.value })}
+                      >
+                        {allEvents.filter((e) => e !== 'All').map((evt) => (
+                          <option key={evt} value={evt}>{evt}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="caption">
+                        {isMr ? 'कॅप्शन किंवा प्रार्थना' : 'Caption / Devotional Note'}{' '}
+                        <span className="muted small">({isMr ? 'ऐच्छिक' : 'optional'})</span>
+                      </label>
+                      <textarea
+                        id="caption"
+                        value={form.caption}
+                        onChange={(e) => setForm({ ...form, caption: e.target.value })}
+                        placeholder={isMr ? 'उदा. श्री क्षेत्र ब्रह्मदेव देवस्थान येथील सुंदर आरती...' : 'e.g. Beautiful aarti at Brahmadev Devasthan…'}
+                        maxLength={300}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '.65rem', marginTop: '.5rem' }}>
+                      <button
+                        className="btn primary"
+                        type="submit"
+                        disabled={busy}
+                        style={{ width: '100%', justifyContent: 'center', fontSize: '1.05rem', padding: '.8rem' }}
+                      >
+                        {busy
+                          ? (isMr ? '⏳ अपलोड होत आहे...' : '⏳ Uploading…')
+                          : (isMr ? '🙏 मंदिर ट्रस्टकडे पाठवा' : '🙏 Submit for Trust Approval')
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={busy}
+                        onClick={removeFile}
+                        style={{ width: '100%', justifyContent: 'center', borderColor: 'var(--line)', color: 'var(--muted)' }}
+                      >
+                        {isMr ? 'रद्द करा' : 'Cancel'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Right: Info panel */}
+                <div className="gal-upload-info-col">
+                  <div className="gal-info-card">
+                    <h3>📋 {isMr ? 'मार्गदर्शक तत्त्वे' : 'Guidelines'}</h3>
+                    <ul className="gal-guidelines">
+                      <li><span className="gal-gl-icon">🔍</span><span>{isMr ? 'सर्व फोटो व व्हिडिओ ट्रस्टच्या पडताळणीनंतरच प्रदर्शित केले जातात.' : 'All media is reviewed by the temple trust before appearing publicly.'}</span></li>
+                      <li><span className="gal-gl-icon">🙏</span><span>{isMr ? 'केवळ आदरयुक्त व दर्शन-संबंधित क्षण सामायिक करा.' : 'Only share respectful, darshan-related photos and videos.'}</span></li>
+                      <li><span className="gal-gl-icon">🔒</span><span>{isMr ? 'आपला फोन नंबर खाजगी ठेवला जातो.' : 'Your phone number is kept strictly private.'}</span></li>
+                      <li><span className="gal-gl-icon">⛔</span><span>{isMr ? 'ड्युप्लिकेट फाईल अपलोड करता येत नाही.' : 'Duplicate files are automatically rejected.'}</span></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* 3. INITIAL FILE SELECTION SCREEN */
+              <div className="gal-upload-layout">
+                <div className="gal-upload-form-col">
+                  {/* Media type toggle */}
+                  <div className="media-type-toggle">
+                    <button
+                      type="button"
+                      className={`media-toggle-btn${uploadType === 'photo' ? ' active' : ''}`}
+                      onClick={() => switchUploadType('photo')}
+                    >
+                      🖼️ {isMr ? 'फोटो अपलोड' : 'Upload Photo'}
+                    </button>
+                    <button
+                      type="button"
+                      className={`media-toggle-btn${uploadType === 'video' ? ' active' : ''}`}
+                      onClick={() => switchUploadType('video')}
+                    >
+                      🎬 {isMr ? 'व्हिडिओ अपलोड' : 'Upload Video'}
+                    </button>
+                  </div>
+
                   {/* Dropzone */}
                   <div
                     className={`upload-dropzone${dragOver ? ' drag-over' : ''}`}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
                     onDrop={handleDrop}
-                    onClick={() => !file && (uploadType === 'video' ? videoInputRef.current?.click() : galleryInputRef.current?.click())}
-                    style={{ cursor: file ? 'default' : 'pointer' }}
+                    onClick={() => uploadType === 'video' ? videoInputRef.current?.click() : galleryInputRef.current?.click()}
+                    style={{ cursor: 'pointer' }}
                   >
-                    {/* Hidden inputs */}
-                    <input ref={galleryInputRef} type="file" accept="image/*" id="galleryUpload" onChange={handleFileChange} hidden />
-                    <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" id="cameraUpload" onChange={handleFileChange} hidden />
-                    <input ref={videoInputRef} type="file" accept="video/*" id="videoUpload" onChange={handleFileChange} hidden />
-
-                    {preview ? (
-                      <div className="gal-preview-wrap">
+                    <div className="gal-dropzone-inner">
+                      <div className="gal-upload-svg">
+                        {uploadType === 'photo' ? (
+                          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="12" width="56" height="40" rx="6" stroke="currentColor" strokeWidth="3"/>
+                            <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="3"/>
+                            <circle cx="32" cy="32" r="4" fill="currentColor"/>
+                            <rect x="22" y="8" width="20" height="6" rx="3" stroke="currentColor" strokeWidth="2.5"/>
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="12" width="44" height="40" rx="6" stroke="currentColor" strokeWidth="3"/>
+                            <path d="M48 24l12-8v32l-12-8V24z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round"/>
+                            <circle cx="22" cy="32" r="8" stroke="currentColor" strokeWidth="2.5"/>
+                            <path d="M19 29l9 3-9 3V29z" fill="currentColor"/>
+                          </svg>
+                        )}
+                      </div>
+                      <p className="gal-dz-title">
                         {uploadType === 'photo'
-                          ? <img src={preview} alt="Selected image preview" className="gal-preview-img" />
-                          : <video src={preview} controls className="gal-preview-img" style={{ maxHeight: 320 }} />
+                          ? (isMr ? 'फोटो निवडा किंवा ड्रॅग करा' : 'Choose or drag a photo')
+                          : (isMr ? 'व्हिडिओ निवडा किंवा ड्रॅग करा' : 'Choose or drag a video')
                         }
-                        <button type="button" className="gal-preview-remove" onClick={(e) => { e.stopPropagation(); removeFile(); }} aria-label="Remove file">✕</button>
-                        <div className="gal-preview-bar">
-                          {uploadType === 'photo' && (
-                            <button type="button" className="btn small" aria-label="Take photo" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}>📸 Retake</button>
-                          )}
-                          <button
-                            type="button"
-                            className="btn small"
-                            aria-label="Choose another file"
-                            onClick={(e) => { e.stopPropagation(); (uploadType === 'video' ? videoInputRef : galleryInputRef).current?.click(); }}
-                          >
-                            {uploadType === 'photo' ? '🖼️ Change' : '🎬 Change'}
+                      </p>
+                      <p className="small muted">
+                        {uploadType === 'photo'
+                          ? (isMr ? 'दर्शन, आरती व उत्सवाचे क्षण अपलोड करा' : 'Upload darshan, aarti or temple moments')
+                          : (isMr ? 'मंदिरातील विधी, आरती व उत्सवाचे व्हिडिओ पाठवा' : 'Share temple ceremonies and festivals')
+                        }
+                      </p>
+                      <div className="gal-action-btns" style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '.85rem' }}>
+                        {uploadType === 'photo' ? (
+                          <>
+                            <button type="button" className="btn primary" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}>
+                              📸 {isMr ? 'कॅमेराने फोटो काढा' : 'Take with Camera'}
+                            </button>
+                            <button type="button" className="btn" style={{ borderColor: 'var(--gold)', color: 'var(--fg)', background: 'var(--band)' }} onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}>
+                              🖼️ {isMr ? 'गॅलरीतून निवडा' : 'Choose from Gallery'}
+                            </button>
+                          </>
+                        ) : (
+                          <button type="button" className="btn primary" onClick={(e) => { e.stopPropagation(); videoInputRef.current?.click(); }}>
+                            🎬 {isMr ? 'व्हिडिओ फाईल निवडा' : 'Choose Video File'}
                           </button>
-                          <button type="button" className="btn small danger" onClick={(e) => { e.stopPropagation(); removeFile(); }}>✕ Remove</button>
-                        </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="gal-dropzone-inner">
-                        <div className="gal-upload-svg">
-                          {uploadType === 'photo' ? (
-                            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="4" y="12" width="56" height="40" rx="6" stroke="currentColor" strokeWidth="3"/>
-                              <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="3"/>
-                              <circle cx="32" cy="32" r="4" fill="currentColor"/>
-                              <rect x="22" y="8" width="20" height="6" rx="3" stroke="currentColor" strokeWidth="2.5"/>
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="4" y="12" width="44" height="40" rx="6" stroke="currentColor" strokeWidth="3"/>
-                              <path d="M48 24l12-8v32l-12-8V24z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round"/>
-                              <circle cx="22" cy="32" r="8" stroke="currentColor" strokeWidth="2.5"/>
-                              <path d="M19 29l9 3-9 3V29z" fill="currentColor"/>
-                            </svg>
-                          )}
-                        </div>
-                        <p className="gal-dz-title">{uploadType === 'photo' ? 'Choose or drag a photo' : 'Choose or drag a video'}</p>
-                        <p className="small muted">{uploadType === 'photo' ? 'Upload darshan, aarti or temple moments' : 'Share temple ceremonies and festivals'}</p>
-                        <div className="gal-action-btns" style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '.85rem' }}>
-                          {uploadType === 'photo' ? (
-                            <>
-                              <button type="button" className="btn primary" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}>📸 Take with Camera</button>
-                              <button type="button" className="btn" style={{ borderColor: 'var(--gold)', color: 'var(--fg)', background: 'var(--band)' }} onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }}>🖼️ Choose from Gallery</button>
-                            </>
-                          ) : (
-                            <button type="button" className="btn primary" onClick={(e) => { e.stopPropagation(); videoInputRef.current?.click(); }}>🎬 Choose Video File</button>
-                          )}
-                        </div>
-                        <p className="small muted" style={{ marginTop: '.65rem' }}>
-                          {uploadType === 'photo' ? 'Max 5 MB · JPEG, PNG, WebP' : 'Max 100 MB · MP4, MOV, WebM'}
-                        </p>
-                      </div>
-                    )}
+                      <p className="small muted" style={{ marginTop: '.65rem' }}>
+                        {uploadType === 'photo' ? 'Max 5 MB · JPEG, PNG, WebP' : 'Max 100 MB · MP4, MOV, WebM'}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Form Fields */}
-                  <div className="gal-fields">
-                    <div className="field">
-                      <label htmlFor="uploaderName">Your Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input id="uploaderName" type="text" value={form.uploaderName} onChange={(e) => setForm({ ...form, uploaderName: e.target.value })} placeholder="e.g. Patil Family" maxLength={120} required />
+                  {/* In-page Error Banner if any */}
+                  {uploadError && (
+                    <div className="upload-error-banner" role="alert">
+                      <span>⚠️</span>
+                      <span>{uploadError}</span>
                     </div>
-                    <div className="field">
-                      <label htmlFor="uploaderPhone">Phone / WhatsApp <span className="muted small">(private, for temple office only)</span></label>
-                      <input id="uploaderPhone" type="tel" value={form.uploaderPhone} onChange={(e) => setForm({ ...form, uploaderPhone: e.target.value })} placeholder="e.g. 9876543210" maxLength={20} inputMode="tel" />
-                    </div>
-                    <div className="field">
-                      <label htmlFor="uploadEvent">Event / Occasion</label>
-                      <select id="uploadEvent" value={form.event} onChange={(e) => setForm({ ...form, event: e.target.value })}>
-                        {allEvents.filter((e) => e !== 'All').map((evt) => <option key={evt} value={evt}>{evt}</option>)}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="caption">Caption <span className="muted small">(optional)</span></label>
-                      <textarea id="caption" value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} placeholder="e.g. Beautiful aarti at Brahmadev Devasthan…" maxLength={300} rows={3} />
-                    </div>
-                    <button className="btn primary" type="submit" disabled={busy} style={{ width: '100%', justifyContent: 'center' }}>
-                      {busy ? '⏳ Uploading…' : '🙏 Submit for Approval'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Right: Info panel */}
-              <div className="gal-upload-info-col">
-                <div className="gal-info-card">
-                  <h3>📋 Guidelines</h3>
-                  <ul className="gal-guidelines">
-                    <li><span className="gal-gl-icon">🔍</span><span>All media is reviewed by the temple trust before appearing publicly.</span></li>
-                    <li><span className="gal-gl-icon">🙏</span><span>Only share respectful, darshan-related photos and videos.</span></li>
-                    <li><span className="gal-gl-icon">🔒</span><span>Your phone number is kept private — used only if the office needs to contact you.</span></li>
-                    <li><span className="gal-gl-icon">📸</span><span>High-resolution photos and clear videos look best in the gallery.</span></li>
-                    <li><span className="gal-gl-icon">⛔</span><span>Duplicate files are automatically rejected — each photo/video can only be uploaded once.</span></li>
-                  </ul>
+                  )}
                 </div>
-                <div className="gal-info-card" style={{ background: 'linear-gradient(135deg, var(--maroon-2), var(--maroon))', color: 'var(--on-dark)', border: 'none' }}>
-                  <h3 style={{ color: 'var(--gold-bright)' }}>✨ How it works</h3>
-                  <div className="gal-steps">
-                    <div className="gal-step"><span>1</span><p>Choose a {uploadType} from your phone or camera</p></div>
-                    <div className="gal-step"><span>2</span><p>Fill in your name and a brief caption</p></div>
-                    <div className="gal-step"><span>3</span><p>Submit — temple trust reviews within 24 hours</p></div>
-                    <div className="gal-step"><span>4</span><p>Your {uploadType} appears in the gallery for all devotees!</p></div>
+
+                {/* Right: Info panel */}
+                <div className="gal-upload-info-col">
+                  <div className="gal-info-card">
+                    <h3>📋 {isMr ? 'मार्गदर्शक तत्त्वे' : 'Guidelines'}</h3>
+                    <ul className="gal-guidelines">
+                      <li><span className="gal-gl-icon">🔍</span><span>{isMr ? 'सर्व फोटो व व्हिडिओ ट्रस्टच्या पडताळणीनंतरच प्रदर्शित केले जातात.' : 'All media is reviewed by the temple trust before appearing publicly.'}</span></li>
+                      <li><span className="gal-gl-icon">🙏</span><span>{isMr ? 'केवळ आदरयुक्त व दर्शन-संबंधित क्षण सामायिक करा.' : 'Only share respectful, darshan-related photos and videos.'}</span></li>
+                      <li><span className="gal-gl-icon">🔒</span><span>{isMr ? 'आपला फोन नंबर खाजगी ठेवला जातो — केवळ कार्यालयासाठी.' : 'Your phone number is kept private — used only if the office needs to contact you.'}</span></li>
+                      <li><span className="gal-gl-icon">📸</span><span>{isMr ? 'चांगल्या रिझोल्यूशनचे फोटो व व्हिडिओ सर्वोत्तम दिसतात.' : 'High-resolution photos and clear videos look best in the gallery.'}</span></li>
+                      <li><span className="gal-gl-icon">⛔</span><span>{isMr ? 'ड्युप्लिकेट फाईल आपोआप नाकारली जाते.' : 'Duplicate files are automatically rejected.'}</span></li>
+                    </ul>
+                  </div>
+                  <div className="gal-info-card" style={{ background: 'linear-gradient(135deg, var(--maroon-2), var(--maroon))', color: 'var(--on-dark)', border: 'none' }}>
+                    <h3 style={{ color: 'var(--gold-bright)' }}>✨ {isMr ? 'प्रक्रिया कशी चालते' : 'How it works'}</h3>
+                    <div className="gal-steps">
+                      <div className="gal-step"><span>1</span><p>{isMr ? 'आपल्या फोनमधून फोटो किंवा व्हिडिओ निवडा' : `Choose a ${uploadType} from your phone or camera`}</p></div>
+                      <div className="gal-step"><span>2</span><p>{isMr ? 'माहिती व कॅप्शन भरा' : 'Fill in your name and a brief caption'}</p></div>
+                      <div className="gal-step"><span>3</span><p>{isMr ? 'सबमिट करा — ट्रस्ट २४ तासांत पडताळणी करेल' : 'Submit — temple trust reviews within 24 hours'}</p></div>
+                      <div className="gal-step"><span>4</span><p>{isMr ? 'आपले माध्यम सर्व भाविकांसाठी दालनात दिसेल!' : `Your ${uploadType} appears in the gallery for all devotees!`}</p></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
       )}
