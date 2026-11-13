@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useSite } from '../SiteContext.jsx';
 import { api, fmtDate } from '../api.js';
 
@@ -103,7 +102,6 @@ export default function Gallery() {
       setPhotos(data);
     } catch (e) {
       setPhotoError(e.message || 'Could not load photos.');
-      toast.error(e.message || 'Could not load photos.');
     } finally {
       setPhotoLoading(false);
     }
@@ -119,7 +117,6 @@ export default function Gallery() {
       setVideos(data);
     } catch (e) {
       setVideoError(e.message || 'Could not load videos.');
-      toast.error(e.message || 'Could not load videos.');
     } finally {
       setVideoLoading(false);
     }

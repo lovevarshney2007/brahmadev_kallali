@@ -1,6 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { Toaster } from 'sonner';
 import { SiteProvider } from './SiteContext.jsx';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
@@ -39,7 +38,6 @@ function ScrollManager() {
 export default function App() {
   return (
     <SiteProvider>
-      <Toaster position="top-center" richColors theme="system" closeButton />
       <ScrollManager />
       <Header />
       <main>

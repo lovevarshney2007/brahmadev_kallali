@@ -188,10 +188,9 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .form input,.form select,.form textarea,.field input{font:inherit;font-size:.98rem;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);width:100%;min-width:0}
 .form .check,.check{display:flex;align-items:center;gap:.5rem;font-size:.92rem}
 .form .check input{width:auto}
-.form .wide{grid-column:1/-1}
-.status{font-size:.92rem;padding:.6rem .9rem;border-radius:8px;background:var(--band)}
-.status.error{background:transparent;border:1px solid var(--danger);color:var(--danger)}
-.status.ok{background:transparent;border:1px solid var(--good);color:var(--good)}
+.status{font-size:.92rem;padding:.75rem 1rem;border-radius:10px;line-height:1.4;margin:.5rem 0;display:flex;align-items:center;gap:.5rem}
+.status.error{background:rgba(231,76,60,.12);border:1px solid var(--danger);color:var(--danger)}
+.status.ok{background:rgba(46,139,87,.14);border:1px solid var(--good);color:var(--good)}
 .login{max-width:420px;margin:0 auto;display:grid;gap:1rem}
 .rows{display:grid;gap:.5rem}
 .row-edit{display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:.5rem}

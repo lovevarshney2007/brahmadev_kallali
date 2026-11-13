@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSite } from '../SiteContext.jsx';
 import { api, inr, UPI_RE } from '../api.js';
@@ -47,7 +46,6 @@ export default function Donate() {
   async function payOnline() {
     if (!(finalAmount >= 1)) {
       const errMsg = isMr ? 'कृपया रक्कम निवडा किंवा टाका.' : 'Please choose or enter an amount.';
-      toast.error(errMsg);
       setStatus({ kind: 'error', text: errMsg });
       return;
     }
@@ -72,11 +70,9 @@ export default function Donate() {
             const msg = r.receiptNo
               ? (isMr ? `धन्यवाद. आपले ${inr(r.amount)} चे दान प्राप्त झाले. पावती क्र. ${r.receiptNo}.` : `Thank you. Your daan of ${inr(r.amount)} is received. Receipt no. ${r.receiptNo}.`)
               : r.message;
-            toast.success(msg);
             setStatus({ kind: 'ok', text: msg });
             refresh();
           } catch (e) {
-            toast.error(e.message);
             setStatus({ kind: 'error', text: e.message });
           }
         },
@@ -84,12 +80,10 @@ export default function Donate() {
       });
       rzp.on('payment.failed', (r) => {
         const msg = `${isMr ? 'पेमेंट अयशस्वी झाले' : 'Payment failed'}: ${r.error?.description || (isMr ? 'कृपया पुन्हा प्रयत्न करा.' : 'please try again.')}`;
-        toast.error(msg);
         setStatus({ kind: 'error', text: msg });
       });
       rzp.open();
     } catch (e) {
-      toast.error(e.message);
       setStatus({ kind: 'error', text: e.message });
     } finally {
       setBusy(false);
@@ -100,7 +94,6 @@ export default function Donate() {
     try {
       await navigator.clipboard.writeText(upi);
       setCopied(true);
-      toast.success(isMr ? 'UPI ID कॉपी केले!' : 'UPI ID copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       /* ignore */

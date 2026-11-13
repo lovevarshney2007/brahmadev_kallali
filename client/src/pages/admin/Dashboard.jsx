@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { api, inr, fmtDate, today, UPI_RE } from '../../api.js';
 import { useSite } from '../../SiteContext.jsx';
 
@@ -9,6 +8,17 @@ const SOURCES = [['upi', 'UPI / QR'], ['cash', 'Cash'], ['bank', 'Bank transfer'
 function Status({ s }) {
   if (!s) return null;
   return <div className={`status ${s.kind}`} role="status">{s.text}</div>;
+}
+
+function ConfirmDeleteButton({ onConfirm }) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) return <button className="btn small danger" onClick={() => setAsking(true)}>Delete</button>;
+  return (
+    <span style={{ display: 'inline-flex', gap: '.3rem', alignItems: 'center' }}>
+      <button className="btn small danger" onClick={() => { setAsking(false); onConfirm(); }}>Confirm Delete</button>
+      <button className="btn small" onClick={() => setAsking(false)}>Cancel</button>
+    </span>
+  );
 }
 
 // Cancel an entry with a reason. Entries are never deleted, so the ledger keeps an audit trail.
@@ -43,22 +53,19 @@ function Donations({ purposes, onChange }) {
     try {
       const d = await api('/admin/donations', { method: 'POST', body: f });
       const msg = `Recorded ${inr(d.amount)} — receipt no. ${d.receiptNo}.`;
-      toast.success(msg);
       setStatus({ kind: 'ok', text: msg });
       setF({ ...blank, date: f.date, source: f.source });
       load(); onChange();
     } catch (err) {
-      toast.error(err.message);
       setStatus({ kind: 'error', text: err.message });
     }
   }
   async function voidIt(id, reason) {
     try {
       await api(`/admin/donations/${id}/void`, { method: 'PATCH', body: { reason } });
-      toast.success('Donation entry cancelled.');
+      setStatus({ kind: 'ok', text: 'Donation entry cancelled.' });
       load(); onChange();
     } catch (err) {
-      toast.error(err.message);
       setStatus({ kind: 'error', text: err.message });
     }
   }
@@ -275,39 +282,33 @@ function GalleryModeration({ onChange }) {
   async function approvePhoto(id) {
     try {
       await api(`/admin/photos/${id}/approve`, { method: 'PATCH' });
-      toast.success('Photo approved.');
-      setStatus({ kind: 'ok', text: 'Photo approved.' });
+      setStatus({ kind: 'ok', text: 'Photo approved successfully.' });
       loadPhotos(); onChange();
-    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
   }
 
   async function removePhoto(id) {
-    if (!window.confirm('Delete this photo permanently?')) return;
     try {
       await api(`/admin/photos/${id}`, { method: 'DELETE' });
-      toast.success('Photo deleted.');
-      setStatus({ kind: 'ok', text: 'Photo deleted.' });
+      setStatus({ kind: 'ok', text: 'Photo deleted permanently.' });
       loadPhotos(); onChange();
-    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
   }
 
   async function approveVideo(id) {
     try {
       await api(`/gallery/admin/videos/${id}/approve`, { method: 'PATCH' });
-      toast.success('Video approved.');
-      setStatus({ kind: 'ok', text: 'Video approved.' });
+      setStatus({ kind: 'ok', text: 'Video approved successfully.' });
       loadVideos(); onChange();
-    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
   }
 
   async function removeVideo(id) {
-    if (!window.confirm('Delete this video permanently?')) return;
     try {
       await api(`/gallery/admin/videos/${id}`, { method: 'DELETE' });
-      toast.success('Video deleted.');
-      setStatus({ kind: 'ok', text: 'Video deleted.' });
+      setStatus({ kind: 'ok', text: 'Video deleted permanently.' });
       loadVideos(); onChange();
-    } catch (e) { toast.error(e.message); setStatus({ kind: 'error', text: e.message }); }
+    } catch (e) { setStatus({ kind: 'error', text: e.message }); }
   }
 
   return (
@@ -353,9 +354,9 @@ function GalleryModeration({ onChange }) {
                     <td className="small muted" style={{ maxWidth: 200 }}>{p.caption || '—'}</td>
                     <td>{fmtDate(p.createdAt)}</td>
                     <td>{p.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
-                    <td style={{ display: 'flex', gap: '.35rem' }}>
+                    <td style={{ display: 'flex', gap: '.35rem', alignItems: 'center' }}>
                       {!p.approved && <button className="btn small" onClick={() => approvePhoto(p._id)}>Approve</button>}
-                      <button className="btn small danger" onClick={() => removePhoto(p._id)}>Delete</button>
+                      <ConfirmDeleteButton onConfirm={() => removePhoto(p._id)} />
                     </td>
                   </tr>
                 ))}</tbody>
@@ -383,9 +384,9 @@ function GalleryModeration({ onChange }) {
                     <td className="small muted" style={{ maxWidth: 200 }}>{v.caption || '—'}</td>
                     <td>{fmtDate(v.createdAt)}</td>
                     <td>{v.approved ? <span className="chip approved">Approved</span> : <span className="chip pending">Pending</span>}</td>
-                    <td style={{ display: 'flex', gap: '.35rem' }}>
+                    <td style={{ display: 'flex', gap: '.35rem', alignItems: 'center' }}>
                       {!v.approved && <button className="btn small" onClick={() => approveVideo(v._id)}>Approve</button>}
-                      <button className="btn small danger" onClick={() => removeVideo(v._id)}>Delete</button>
+                      <ConfirmDeleteButton onConfirm={() => removeVideo(v._id)} />
                     </td>
                   </tr>
                 ))}</tbody>
