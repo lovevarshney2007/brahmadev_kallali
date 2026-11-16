@@ -44,7 +44,7 @@ export default function News() {
 
   return (
     <div className="page-news">
-      <section className="page-top hero" style={{ paddingBottom: '2.5rem' }}>
+      <section className="page-top hero hero-centered" style={{ paddingBottom: '2.5rem' }}>
         <div className="wrap">
           <div className="head" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', justifyItems: 'center' }}>
             <span className="eyebrow" style={{ color: 'var(--gold-bright)' }}>{t.nav.news}</span>
@@ -72,7 +72,7 @@ export default function News() {
 
       {/* News Articles List */}
       <div className="sec">
-        <div className="wrap" style={{ maxWidth: '850px' }}>
+        <div className="wrap" style={{ maxWidth: '850px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gap: '1.5rem' }}>
             {defaultArticles.map((article) => (
               <article

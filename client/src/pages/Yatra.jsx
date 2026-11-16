@@ -27,7 +27,7 @@ export default function Yatra() {
 
   return (
     <div className="page-yatra">
-      <section className="page-top hero" style={{ paddingBottom: '2.5rem' }}>
+      <section className="page-top hero hero-centered" style={{ paddingBottom: '2.5rem' }}>
         <div className="wrap">
           <div className="head" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', justifyItems: 'center' }}>
             <span className="eyebrow" style={{ color: 'var(--gold-bright)' }}>{t.nav.yatraMahotsav}</span>
