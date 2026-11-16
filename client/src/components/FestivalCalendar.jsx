@@ -60,12 +60,13 @@ export default function FestivalCalendar({
   );
 
   // Get month names from translations
+  // Note: `t` prop is already the festivals sub-object (t.festivals passed from parent)
   const monthNames = useMemo(() => {
-    return t.festivals?.monthNames || ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return t?.monthNames || ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   }, [t]);
 
-  const noFestivalsText = t.festivals?.noFestivals || (isMr ? 'या महिन्यात कोणतेही उत्सव नाही' : 'No festivals scheduled for this month');
-  const calendarDescText = t.festivals?.calendarDesc || (isMr ? 'वर्षभरातील प्रमुख सण व उत्सव' : 'Key celebrations throughout the year');
+  const noFestivalsText = t?.noFestivals || (isMr ? 'या महिन्यात कोणतेही उत्सव नाही' : 'No festivals scheduled for this month');
+  const calendarDescText = t?.calendarDesc || (isMr ? 'वर्षभरातील प्रमुख सण व उत्सव' : 'Key celebrations throughout the year');
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -300,9 +301,9 @@ export default function FestivalCalendar({
         ) : (
           <div className="fest-cal-empty" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem 1rem', display: 'grid', gap: '1rem', justifyItems: 'center' }}>
             <div style={{ fontSize: '3.5rem', lineHeight: 1 }}>📅</div>
-            <h3 style={{ fontFamily: 'var(--display)', color: 'var(--heading)', margin: 0 }}>{t.festivals.noFestivals}</h3>
+            <h3 style={{ fontFamily: 'var(--display)', color: 'var(--heading)', margin: 0 }}>{noFestivalsText}</h3>
             <p style={{ color: 'var(--muted)', maxWidth: '30ch' }}>
-              {t.festivals.calendarDesc}
+              {calendarDescText}
             </p>
           </div>
         )}
