@@ -418,12 +418,113 @@ function Account() {
   );
 }
 
+function Enquiries() {
+  const [list, setList] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [status, setStatus] = useState(null);
+
+  const load = useCallback(() => {
+    const q = statusFilter ? `?status=${statusFilter}` : '';
+    api(`/admin/enquiries${q}`)
+      .then(setList)
+      .catch((e) => setStatus({ kind: 'error', text: e.message }));
+  }, [statusFilter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function updateStatus(id, newStatus) {
+    try {
+      await api(`/admin/enquiries/${id}/status`, {
+        method: 'PATCH',
+        body: { status: newStatus },
+      });
+      load();
+    } catch (err) {
+      setStatus({ kind: 'error', text: err.message });
+    }
+  }
+
+  return (
+    <div className="panel" style={{ display: 'grid', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <h3>Enquiries & Messages</h3>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ padding: '0.35rem 0.75rem', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit' }}
+        >
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="responded">Responded</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+
+      <Status s={status} />
+
+      {!list ? (
+        <p className="muted">Loading enquiries…</p>
+      ) : list.items?.length === 0 ? (
+        <p className="muted">No enquiries found.</p>
+      ) : (
+        <div className="tablebox">
+          <table className="info">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Type</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.items.map((enq) => (
+                <tr key={enq._id}>
+                  <td className="small">{fmtDate(enq.createdAt)}</td>
+                  <td><strong>{enq.name}</strong></td>
+                  <td className="small">
+                    <div><a href={`tel:${enq.phone}`}>{enq.phone}</a></div>
+                    {enq.email && <div><a href={`mailto:${enq.email}`}>{enq.email}</a></div>}
+                  </td>
+                  <td><span className="chip">{enq.type}</span></td>
+                  <td style={{ maxWidth: 300, whiteSpace: 'pre-wrap' }} className="small">{enq.message}</td>
+                  <td>
+                    <span className={`chip ${enq.status === 'responded' ? 'approved' : enq.status === 'pending' ? 'pending' : ''}`}>
+                      {enq.status}
+                    </span>
+                  </td>
+                  <td>
+                    {enq.status === 'pending' && (
+                      <button className="btn small" onClick={() => updateStatus(enq._id, 'responded')}>
+                        Mark Responded
+                      </button>
+                    )}
+                    {enq.status === 'responded' && (
+                      <button className="btn small" onClick={() => updateStatus(enq._id, 'archived')}>
+                        Archive
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { settings, summary, refresh } = useSite();
   const [admin, setAdmin] = useState(null);
   const [tab, setTab] = useState('donations');
-  // Use 'gal' internally for gallery tab to avoid confusion with 'tab' in other components
 
   useEffect(() => {
     api('/auth/me').then((r) => setAdmin(r.admin)).catch(() => navigate('/admin/login', { replace: true }));
@@ -436,7 +537,14 @@ export default function AdminDashboard() {
 
   if (!admin) return <section className="sec page-top"><div className="wrap"><p className="muted">Checking sign-in…</p></div></section>;
   const purposes = settings?.purposes || ['General daan'];
-  const tabs = [['donations', 'Daan received'], ['expenses', 'Expenses'], ['gallery', 'Gallery'], ['settings', 'Site details'], ['account', 'Account']];
+  const tabs = [
+    ['donations', 'Daan received'],
+    ['expenses', 'Expenses'],
+    ['gallery', 'Gallery'],
+    ['enquiries', 'Enquiries'],
+    ['settings', 'Site details'],
+    ['account', 'Account']
+  ];
 
   return (
     <section className="sec page-top">
@@ -459,6 +567,7 @@ export default function AdminDashboard() {
         {tab === 'donations' && <Donations purposes={purposes} onChange={refresh} />}
         {tab === 'expenses' && <Expenses purposes={purposes} onChange={refresh} />}
         {tab === 'gallery' && <GalleryModeration onChange={refresh} />}
+        {tab === 'enquiries' && <Enquiries />}
         {tab === 'settings' && <SiteSettings onChange={refresh} />}
         {tab === 'account' && <Account />}
       </div>

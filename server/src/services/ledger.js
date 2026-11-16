@@ -31,10 +31,35 @@ export async function ledgerSummary(forceFresh = false) {
     return cachedSummary;
   }
 
-  const [received, spent] = await Promise.all([totals(Donation), totals(Expense)]);
+  const [received, spent, uniqueDonors] = await Promise.all([
+    totals(Donation),
+    totals(Expense),
+    Donation.aggregate([
+      { $match: { voided: false } },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $gt: [{ $strLenCP: { $ifNull: ['$phone', ''] } }, 0] },
+              '$phone',
+              {
+                $cond: [
+                  { $gt: [{ $strLenCP: { $ifNull: ['$donorName', ''] } }, 0] },
+                  '$donorName',
+                  '$_id'
+                ]
+              }
+            ]
+          }
+        }
+      },
+      { $count: 'unique' }
+    ])
+  ]);
   const last = [received.lastUpdated, spent.lastUpdated].filter(Boolean).sort().pop() || null;
+  const contributors = uniqueDonors[0]?.unique ?? received.count;
   cachedSummary = {
-    received: { total: received.total, count: received.count, byPurpose: received.byPurpose },
+    received: { total: received.total, count: received.count, contributors, byPurpose: received.byPurpose },
     spent: { total: spent.total, count: spent.count, byPurpose: spent.byPurpose },
     balance: received.total - spent.total,
     lastUpdated: last,

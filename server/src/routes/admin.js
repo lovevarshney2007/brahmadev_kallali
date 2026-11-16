@@ -9,6 +9,7 @@ import { nextReceiptNo } from '../models/Counter.js';
 import { donationInput, expenseInput, settingsInput, ValidationError } from '../utils/validate.js';
 import { ledgerSummary, pageParams, invalidateLedgerCache } from '../services/ledger.js';
 import { Photo } from '../models/Photo.js';
+import { Enquiry } from '../models/Enquiry.js';
 import { deleteFromCloudinary } from '../middleware/upload.js';
 
 const router = Router();
@@ -119,6 +120,29 @@ router.delete('/photos/:id', ah(async (req, res) => {
     await deleteFromCloudinary(photo.publicId);
   }
   res.json({ message: 'Photo deleted successfully.' });
+}));
+
+// ---- Enquiries ----
+router.get('/enquiries', ah(async (req, res) => {
+  const { limit, page, skip } = pageParams(req.query, 100);
+  const filter = {};
+  if (req.query.status) filter.status = req.query.status;
+  const [items, total] = await Promise.all([
+    Enquiry.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Enquiry.countDocuments(filter),
+  ]);
+  res.json({ items, page, pages: Math.ceil(total / limit) || 1, total });
+}));
+
+router.patch('/enquiries/:id/status', ah(async (req, res) => {
+  checkId(req.params.id);
+  const { status } = req.body;
+  if (!['pending', 'responded', 'archived'].includes(status)) {
+    throw new ValidationError('Invalid enquiry status.');
+  }
+  const enquiry = await Enquiry.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  if (!enquiry) return res.status(404).json({ error: 'Enquiry not found.' });
+  res.json(enquiry);
 }));
 
 // ---- Site settings ----

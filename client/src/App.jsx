@@ -10,6 +10,9 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 const Donate = lazy(() => import('./pages/Donate.jsx'));
 const Ledger = lazy(() => import('./pages/Ledger.jsx'));
 const Gallery = lazy(() => import('./pages/Gallery.jsx'));
+const Yatra = lazy(() => import('./pages/Yatra.jsx'));
+const News = lazy(() => import('./pages/News.jsx'));
+const Committee = lazy(() => import('./pages/Committee.jsx'));
 const AdminLogin = lazy(() => import('./pages/admin/Login.jsx'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
@@ -59,6 +62,9 @@ export default function App() {
               <Route path="/donate" element={<Donate />} />
               <Route path="/ledger" element={<Ledger />} />
               <Route path="/gallery" element={<Gallery />} />
+              <Route path="/yatra" element={<Yatra />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/committee" element={<Committee />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="*" element={<NotFound />} />

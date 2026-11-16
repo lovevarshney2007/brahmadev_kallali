@@ -5,6 +5,8 @@ import { Expense } from '../models/Expense.js';
 import { getSettings } from '../models/Settings.js';
 import { PURPOSES } from '../models/constants.js';
 import { ledgerSummary, pageParams } from '../services/ledger.js';
+import { Enquiry } from '../models/Enquiry.js';
+import { enquiryInput } from '../utils/validate.js';
 
 const router = Router();
 
@@ -43,5 +45,11 @@ function listRoute(Model) {
 
 router.get('/donations', listRoute(Donation));
 router.get('/expenses', listRoute(Expense));
+
+router.post('/enquiry', ah(async (req, res) => {
+  const data = enquiryInput(req.body);
+  const enquiry = await Enquiry.create(data);
+  res.status(201).json({ ok: true, message: 'Enquiry received. The temple office will get in touch.', id: enquiry._id });
+}));
 
 export default router;

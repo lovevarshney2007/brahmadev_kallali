@@ -132,3 +132,22 @@ export function videoUploadInput(body) {
   return res.data;
 }
 
+// 6. Enquiry Form Schema
+const enquiryZod = z.object({
+  name: z.string().trim().min(1, 'Please enter your name.').max(120),
+  phone: z.string().trim().min(1, 'Please enter your phone number.').max(20).refine((v) => PHONE_RE.test(v), {
+    message: 'Please enter a valid phone number.',
+  }),
+  email: z.string().trim().max(120).refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+    message: 'Please enter a valid email address.',
+  }).default(''),
+  type: z.enum(['General', 'Temple Visit', 'Worship / Pooja', 'Yatra', 'Donation', 'Other']).default('General'),
+  message: z.string().trim().min(1, 'Please enter your message.').max(2000),
+});
+
+export function enquiryInput(body) {
+  const res = enquiryZod.safeParse(body);
+  if (!res.success) throw new ValidationError(formatZodError(res.error));
+  return res.data;
+}
+

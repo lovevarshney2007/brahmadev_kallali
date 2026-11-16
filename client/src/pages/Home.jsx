@@ -6,36 +6,78 @@ import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
 
-const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Mukhed%2C%20Nanded%2C%20Maharashtra';
+const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Kandhar%2C%20Nanded%2C%20Maharashtra';
 
 export default function Home() {
   const { settings, summary, lang, t } = useSite();
-  const timings = settings?.darshanTimings || [];
+  const isMr = lang === 'mr';
+
+  const timings = settings?.darshanTimings?.length > 0
+    ? settings.darshanTimings
+    : [
+        {
+          seva: t.worship.morningAarti,
+          time: t.worship.morningTime,
+          details: t.worship.morningDetails,
+        },
+        {
+          seva: t.worship.dailyPooja,
+          time: t.worship.dailyTime,
+          details: t.worship.dailyDetails,
+        },
+        {
+          seva: t.worship.eveningAarti,
+          time: t.worship.eveningTime,
+          details: t.worship.eveningDetails,
+        },
+        {
+          seva: t.worship.specialPuja,
+          time: t.worship.onRequest,
+          details: t.worship.bookContact,
+        },
+      ];
+
   const festivals = settings?.festivals || [];
   const c = {
-    person: settings?.contact?.person || 'Maruti kunjatwad',
+    person: settings?.contact?.person || (isMr ? 'मारुती कुंजटवाड' : 'Maruti Kunjatwad'),
     phone: settings?.contact?.phone || '9503131031',
-    email: settings?.contact?.email || '',
+    email: settings?.contact?.email || 'office@shribrahmadevadevasthan.org',
   };
 
-  // Fetch all approved photos and videos for the home page
+  // Fetch approved photos and videos for gallery preview
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [galleryVideos, setGalleryVideos] = useState([]);
-  const [activeMediaTab, setActiveMediaTab] = useState('all'); // 'all' | 'photos' | 'videos'
+  const [activeMediaTab, setActiveMediaTab] = useState('all');
 
-  // Lightboxes for Home page
+  // Lightboxes
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [videoLightboxOpen, setVideoLightboxOpen] = useState(false);
   const [videoLightboxIndex, setVideoLightboxIndex] = useState(0);
 
+  // Enquiry form state
+  const [enquiryForm, setEnquiryForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    type: 'General',
+    message: '',
+  });
+  const [enquiryLoading, setEnquiryLoading] = useState(false);
+  const [enquirySuccess, setEnquirySuccess] = useState(false);
+  const [enquiryError, setEnquiryError] = useState('');
+
   useEffect(() => {
-    api('/gallery/public/photos?limit=100').then((data) => {
-      if (data?.items) setGalleryPhotos(data.items);
-    }).catch(() => {});
-    api('/gallery/public/videos?limit=100').then((data) => {
-      if (data?.items) setGalleryVideos(data.items);
-    }).catch(() => {});
+    api('/gallery/public/photos?limit=6')
+      .then((data) => {
+        if (data?.items) setGalleryPhotos(data.items);
+      })
+      .catch(() => {});
+    api('/gallery/public/videos?limit=4')
+      .then((data) => {
+        if (data?.items) setGalleryVideos(data.items);
+      })
+      .catch(() => {});
   }, []);
 
   // Keyboard navigation for lightboxes
@@ -43,8 +85,11 @@ export default function Home() {
     if (!lightboxOpen) return;
     function handleKeyDown(e) {
       if (e.key === 'Escape') setLightboxOpen(false);
-      else if (e.key === 'ArrowLeft') setLightboxIndex((i) => (i - 1 + (galleryPhotos.length || 1)) % (galleryPhotos.length || 1));
-      else if (e.key === 'ArrowRight') setLightboxIndex((i) => (i + 1) % (galleryPhotos.length || 1));
+      else if (e.key === 'ArrowLeft') {
+        setLightboxIndex((i) => (i - 1 + (galleryPhotos.length || 1)) % (galleryPhotos.length || 1));
+      } else if (e.key === 'ArrowRight') {
+        setLightboxIndex((i) => (i + 1) % (galleryPhotos.length || 1));
+      }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -54,8 +99,11 @@ export default function Home() {
     if (!videoLightboxOpen) return;
     function handleKeyDown(e) {
       if (e.key === 'Escape') setVideoLightboxOpen(false);
-      else if (e.key === 'ArrowLeft') setVideoLightboxIndex((i) => (i - 1 + (galleryVideos.length || 1)) % (galleryVideos.length || 1));
-      else if (e.key === 'ArrowRight') setVideoLightboxIndex((i) => (i + 1) % (galleryVideos.length || 1));
+      else if (e.key === 'ArrowLeft') {
+        setVideoLightboxIndex((i) => (i - 1 + (galleryVideos.length || 1)) % (galleryVideos.length || 1));
+      } else if (e.key === 'ArrowRight') {
+        setVideoLightboxIndex((i) => (i + 1) % (galleryVideos.length || 1));
+      }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -64,60 +112,161 @@ export default function Home() {
   async function likePhoto(id, idx) {
     try {
       const res = await api(`/gallery/public/photos/${id}/like`, { method: 'POST' });
-      setGalleryPhotos((prev) => prev.map((p, i) => i === idx ? { ...p, likes: res.likes } : p));
+      setGalleryPhotos((prev) => prev.map((p, i) => (i === idx ? { ...p, likes: res.likes } : p)));
     } catch {}
   }
 
   async function likeVideo(id, idx) {
     try {
       const res = await api(`/gallery/public/videos/${id}/like`, { method: 'POST' });
-      setGalleryVideos((prev) => prev.map((v, i) => i === idx ? { ...v, likes: res.likes } : v));
+      setGalleryVideos((prev) => prev.map((v, i) => (i === idx ? { ...v, likes: res.likes } : v)));
     } catch {}
+  }
+
+  async function handleEnquirySubmit(e) {
+    e.preventDefault();
+    setEnquiryError('');
+    setEnquirySuccess(false);
+
+    if (!enquiryForm.name.trim()) {
+      setEnquiryError(isMr ? 'कृपया आपले नाव प्रविष्ट करा.' : 'Please enter your full name.');
+      return;
+    }
+    if (!enquiryForm.phone.trim()) {
+      setEnquiryError(isMr ? 'कृपया आपला फोन नंबर प्रविष्ट करा.' : 'Please enter your phone number.');
+      return;
+    }
+    if (!enquiryForm.message.trim()) {
+      setEnquiryError(isMr ? 'कृपया आपला संदेश लिहा.' : 'Please enter your message.');
+      return;
+    }
+
+    setEnquiryLoading(true);
+    try {
+      await api('/public/enquiry', {
+        method: 'POST',
+        body: enquiryForm,
+      });
+      setEnquirySuccess(true);
+      setEnquiryForm({
+        name: '',
+        phone: '',
+        email: '',
+        type: 'General',
+        message: '',
+      });
+    } catch (err) {
+      setEnquiryError(err.message || t.contact.errorMsg);
+    } finally {
+      setEnquiryLoading(false);
+    }
   }
 
   const currentPhoto = galleryPhotos[lightboxIndex];
   const currentVideo = galleryVideos[videoLightboxIndex];
 
+  // Financial calculations for Transparency section
+  const totalReceived = summary?.received?.total ?? 0;
+  const totalSpent = summary?.spent?.total ?? 0;
+  const balance = summary?.balance ?? totalReceived - totalSpent;
+  const totalContributors = summary?.received?.contributors ?? summary?.received?.count ?? 0;
+
   return (
     <>
       <Toran />
+
+      {/* ── 1. HERO BANNER ────────────────────────────────────────── */}
       <section className="hero" id="home">
         <div className="wrap">
           <div className="hero-text" style={{ display: 'grid', gap: '1.1rem', minWidth: 0 }}>
-            <div className="mr-name" lang="mr">{t.hero.deity}</div>
-            <h1>{t.hero.title}</h1>
-            <p className="lede">{t.hero.lede}</p>
-            <div className="btns">
-              <Link className="btn primary" to="/donate">{t.hero.offerDaan}</Link>
-              <Link className="btn light" to="/ledger">{t.hero.seeLedger}</Link>
+            <div className="mr-name" lang="mr">
+              {t.hero.deity}
             </div>
+            <h1 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 2.5rem)', color: 'var(--gold-bright)' }}>
+              {t.hero.title}
+            </h1>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#FAF5EB', opacity: 0.95, fontSize: '0.98rem' }}>
+              <span>📍</span>
+              <strong>{t.hero.location}</strong>
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--display)',
+                color: 'var(--gold-bright)',
+                fontSize: '1.25rem',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {t.hero.tagline}
+            </div>
+            <p className="lede" style={{ fontSize: '1.05rem', lineHeight: 1.65 }}>
+              {t.hero.intro}
+            </p>
+
+            {/* 3 Prominent Hero Action Buttons */}
+            <div className="btns" style={{ marginTop: '0.5rem' }}>
+              <a className="btn light" href="#about">
+                {t.hero.exploreBtn}
+              </a>
+              <Link className="btn primary" to="/yatra">
+                {t.hero.yatraBtn}
+              </Link>
+              <a className="btn light" href="#visit">
+                {t.hero.visitBtn}
+              </a>
+            </div>
+
+            {/* Hero Quick Daan Stats */}
             <div className="hero-stats" aria-live="polite">
-              <div><strong>{summary?.received?.total !== undefined ? inr(summary.received.total) : '—'}</strong><span>{t.hero.daanReceived}</span></div>
-              <div><strong>{summary?.received?.count ?? '—'}</strong><span>{t.hero.offerings}</span></div>
-              <div><strong>{summary?.spent?.total !== undefined ? inr(summary.spent.total) : '—'}</strong><span>{t.hero.spentOnSeva}</span></div>
+              <div>
+                <strong>{summary?.received?.total !== undefined ? inr(summary.received.total) : '—'}</strong>
+                <span>{t.hero.daanReceived}</span>
+              </div>
+              <div>
+                <strong>{summary?.received?.count ?? '—'}</strong>
+                <span>{t.hero.offerings}</span>
+              </div>
+              <div>
+                <strong>{summary?.spent?.total !== undefined ? inr(summary.spent.total) : '—'}</strong>
+                <span>{t.hero.spentOnSeva}</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '2rem 0' }}>
-            <div style={{
-              position: 'absolute',
-              width: '260px',
-              height: '260px',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(245,176,65,.18) 0%, rgba(230,126,34,.08) 60%, transparent 80%)',
-              filter: 'blur(8px)',
-            }} />
-            <Shrine style={{
-              width: '100%',
-              maxWidth: '260px',
-              filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.35))',
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               position: 'relative',
-              zIndex: 1,
-            }} />
+              padding: '2rem 0',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                width: '260px',
+                height: '260px',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle, rgba(245,176,65,.18) 0%, rgba(230,126,34,.08) 60%, transparent 80%)',
+                filter: 'blur(8px)',
+              }}
+            />
+            <Shrine
+              style={{
+                width: '100%',
+                maxWidth: '260px',
+                filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.35))',
+                position: 'relative',
+                zIndex: 1,
+              }}
+            />
           </div>
         </div>
       </section>
 
+      {/* ── 2. ABOUT PREVIEW ─────────────────────────────────────── */}
       <section className="sec" id="about">
         <div className="wrap">
           <SectionHead eyebrow={t.about.eyebrow} title={t.about.title} rule />
@@ -125,7 +274,14 @@ export default function Home() {
             <div className="prose">
               <p>{t.about.p1}</p>
               <p>{t.about.p2}</p>
-              <p style={{ fontFamily: 'var(--display)', fontSize: '1.15rem', color: 'var(--saffron)' }}>{t.about.blessing}</p>
+              <p style={{ fontFamily: 'var(--display)', fontSize: '1.15rem', color: 'var(--saffron)' }}>
+                {t.about.blessing}
+              </p>
+              <div style={{ marginTop: '1.5rem' }}>
+                <a href="#history" className="btn small primary">
+                  {t.about.learnMore}
+                </a>
+              </div>
             </div>
             <div className="cols">
               <div className="card icon-card">
@@ -148,6 +304,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── 3. HISTORY PREVIEW ────────────────────────────────────── */}
       <section className="sec alt" id="history">
         <div className="wrap">
           <SectionHead eyebrow={t.history.eyebrow} title={t.history.title}>
@@ -186,114 +343,301 @@ export default function Home() {
                 <Tbc />
               </li>
             </ol>
-            <div className="note">
-              <strong>{t.history.trustNoteTitle}</strong>{t.history.trustNoteText}
+            <div style={{ display: 'grid', gap: '1rem', alignSelf: 'start' }}>
+              <div className="note">
+                <strong>{t.history.trustNoteTitle}</strong> {t.history.trustNoteText}
+              </div>
+              <div>
+                <a href="#contact" className="btn small primary">
+                  {t.history.exploreBtn}
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── 4. DAILY SEVA AND AARTI ───────────────────────────────── */}
       <section className="sec" id="worship">
         <div className="wrap">
           <SectionHead eyebrow={t.worship.eyebrow} title={t.worship.title}>
             <p>{t.worship.desc}</p>
           </SectionHead>
-          {timings.length > 0 ? (
-            <div className="seva-cards" role="list">
-              {timings.map((tRow, idx) => (
-                <article key={tRow.seva} className="seva-card" role="listitem">
-                  <div className="seva-icon">
-                    {/aarti/i.test(tRow.seva) ? '🪔' : /abhishek|puja/i.test(tRow.seva) ? '🕉️' : '🙏'}
+          <div className="seva-cards" role="list">
+            {timings.map((tRow, idx) => (
+              <article key={idx} className="seva-card" role="listitem">
+                <div className="seva-icon">
+                  {/aarti/i.test(tRow.seva) ? '🪔' : /abhishek|puja/i.test(tRow.seva) ? '🕉️' : '🙏'}
+                </div>
+                <div className="seva-content">
+                  <h3>{tRow.seva}</h3>
+                  <div className="seva-time">
+                    <span className="time-icon">🕐</span>
+                    <span>
+                      {/confirm|लवकरच/i.test(tRow.time) || !tRow.time ? <Tbc /> : tRow.time}
+                    </span>
                   </div>
-                  <div className="seva-content">
-                    <h3>{tRow.seva}</h3>
-                    <div className="seva-time">
-                      <span className="time-icon">🕐</span>
-                      <span>{/confirm/i.test(tRow.time) || !tRow.time ? <Tbc /> : tRow.time}</span>
-                    </div>
-                    <p className="seva-details">{tRow.details}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="tablebox">
-              <table className="info">
-                <thead><tr><th>{t.worship.colSeva}</th><th>{t.worship.colTime}</th><th>{t.worship.colDetails}</th></tr></thead>
-                <tbody>
-                  <tr><td colSpan="3" className="empty">{t.worship.emptyTimings}</td></tr>
-                  <tr><td>{t.worship.specialPuja}</td><td>{t.worship.onRequest}</td><td>{t.worship.bookContact}</td></tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+                  <p className="seva-details">{tRow.details}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
           <div className="special-puja-card">
             <div className="special-puja-icon">🕉️</div>
             <div>
               <h3>{t.worship.specialPuja}</h3>
-              <p><span className="time-icon">🕐</span> {t.worship.onRequest}</p>
+              <p>
+                <span className="time-icon">🕐</span> {t.worship.onRequest}
+              </p>
               <p>{t.worship.bookContact}</p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── 5. FESTIVALS & YATRA MAHOTSAV ─────────────────────────── */}
       <section className="sec alt" id="festivals">
         <div className="wrap">
           <SectionHead eyebrow={t.festivals.eyebrow} title={t.festivals.title}>
-            <p>{t.festivals.calendarDesc}</p>
+            <p>{t.festivals.desc}</p>
           </SectionHead>
-          <FestivalCalendar
-            festivals={festivals}
-            initialMonth={new Date().getMonth()}
-            showMonthNav={true}
-            t={t.festivals}
-            lang={lang}
-          />
+
+          {/* Prominent Upcoming Yatra Mahotsav Card */}
+          <div
+            className="card"
+            style={{
+              padding: '2rem',
+              background: 'linear-gradient(135deg, var(--card), var(--band))',
+              borderRadius: '16px',
+              border: '2px solid var(--gold)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              boxShadow: '0 8px 24px -10px rgba(0,0,0,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontSize: '2rem' }}>🚩</span>
+                <h3 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--heading)' }}>
+                  {t.festivals.yatraCardTitle}
+                </h3>
+              </div>
+              <span
+                style={{
+                  background: 'var(--warn-bg)',
+                  color: 'var(--cta)',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '999px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                }}
+              >
+                {isMr ? 'वार्षिक उत्सव' : 'Annual Celebration'}
+              </span>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '1.02rem', color: 'var(--fg)', lineHeight: 1.6 }}>
+              {t.festivals.yatraCardNotice}
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+              <Link to="/yatra" className="btn primary">
+                {t.festivals.viewProgramme}
+              </Link>
+              <Link to="/yatra?tab=rituals" className="btn">
+                {t.nav.ritualsTraditions}
+              </Link>
+            </div>
+          </div>
+
+          {/* Festival Calendar Component */}
+          <div style={{ marginTop: '2.5rem' }}>
+            <FestivalCalendar
+              festivals={festivals}
+              initialMonth={new Date().getMonth()}
+              showMonthNav={true}
+              t={t.festivals}
+              lang={lang}
+            />
+          </div>
         </div>
       </section>
 
-      <section className="sec" id="visit">
+      {/* ── 6. DONATION TRANSPARENCY PREVIEW (DAAN LEDGER) ─────────── */}
+      <section className="sec" id="transparency">
         <div className="wrap">
-          <SectionHead eyebrow={t.visit.eyebrow} title={t.visit.title} />
+          <SectionHead eyebrow={t.transparency.eyebrow} title={t.transparency.title}>
+            <p>{t.transparency.desc}</p>
+          </SectionHead>
+
+          {/* 4 Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div
+              className="card"
+              style={{
+                padding: '1.5rem',
+                background: 'var(--card)',
+                borderRadius: '14px',
+                border: '1px solid var(--line)',
+                textAlign: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>💰</div>
+              <span className="small muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {t.transparency.totalReceived}
+              </span>
+              <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--good)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
+                {inr(totalReceived)}
+              </strong>
+            </div>
+
+            <div
+              className="card"
+              style={{
+                padding: '1.5rem',
+                background: 'var(--card)',
+                borderRadius: '14px',
+                border: '1px solid var(--line)',
+                textAlign: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>📋</div>
+              <span className="small muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {t.transparency.totalSpent}
+              </span>
+              <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--cta)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
+                {inr(totalSpent)}
+              </strong>
+            </div>
+
+            <div
+              className="card"
+              style={{
+                padding: '1.5rem',
+                background: 'var(--card)',
+                borderRadius: '14px',
+                border: '1px solid var(--line)',
+                textAlign: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>🏛️</div>
+              <span className="small muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {t.transparency.balance}
+              </span>
+              <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--gold)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
+                {inr(balance)}
+              </strong>
+            </div>
+
+            <div
+              className="card"
+              style={{
+                padding: '1.5rem',
+                background: 'var(--card)',
+                borderRadius: '14px',
+                border: '1px solid var(--line)',
+                textAlign: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>👥</div>
+              <span className="small muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {t.transparency.contributors}
+              </span>
+              <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--heading)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
+                {totalContributors}
+              </strong>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.75rem' }}>
+            <Link to="/ledger" className="btn primary">
+              {t.transparency.viewLedger}
+            </Link>
+            <Link to="/donate" className="btn light" style={{ borderColor: 'var(--cta)', color: 'var(--cta)' }}>
+              {t.transparency.donateNow}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. PLAN YOUR VISIT ────────────────────────────────────── */}
+      <section className="sec alt" id="visit">
+        <div className="wrap">
+          <SectionHead eyebrow={t.visit.eyebrow} title={t.visit.title}>
+            <p>{t.visit.desc}</p>
+          </SectionHead>
 
           {/* Location Info Cards */}
-          <div className="cols" style={{ marginBottom: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+          <div
+            className="cols"
+            style={{
+              marginBottom: '2rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            }}
+          >
             <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🕉️</div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.templeLabel}</h3>
-              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.templeVal}</p>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
+                {t.visit.templeLabel}
+              </h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>
+                {t.visit.templeVal}
+              </p>
             </div>
             <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>📍</div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.villageLabel}</h3>
-              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.villageVal}</p>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
+                {t.visit.villageLabel}
+              </h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>
+                {t.visit.villageVal}
+              </p>
             </div>
             <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🏛️</div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.talukaLabel}</h3>
-              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.talukaVal}</p>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
+                {t.visit.talukaLabel}
+              </h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>
+                {t.visit.talukaVal}
+              </p>
             </div>
             <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🗺️</div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.districtLabel}</h3>
-              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.districtVal}</p>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
+                {t.visit.districtLabel}
+              </h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>
+                {t.visit.districtVal}
+              </p>
             </div>
           </div>
 
           {/* Travel Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '1.5rem',
+            }}
+          >
             {/* Road Travel */}
             <TravelCard
               mode="road"
               title={t.visit.byRoad}
               description={t.visit.roadDesc}
               details={[
-                t.visit.distanceFromMukhed,
+                t.visit.distanceFromKandhar,
                 t.visit.distanceFromNanded,
                 t.visit.travelTimeRoad,
-                'Regular ST buses from Mukhed to Kallali',
-                'Private taxis/auto-rickshaws available at Mukhed',
+                isMr ? 'कंधार व मुखेडवरून कल्लाळीसाठी नियमित एसटी बसेस' : 'Regular ST buses and private autos from Kandhar/Mukhed to Kallali',
               ]}
               mapsUrl={MAPS}
               mapsLabel={t.visit.mapsBtn}
@@ -307,9 +651,8 @@ export default function Home() {
               details={[
                 t.visit.distanceFromNanded,
                 t.visit.travelTimeRail,
-                'Major station: Nanded (NED) — connected to Mumbai, Hyderabad, Pune, Delhi',
-                'Regular trains: Devagiri Exp, Sachkhand Exp, Nanded Express',
-                'Auto/bus from Nanded station to Mukhed (2 hrs)',
+                isMr ? 'प्रमुख स्थानक: नांदेड (NED) — मुंबई, पुणे, हैद्राबादशी जोडलेले' : 'Major station: Hazur Sahib Nanded (NED) — direct express trains',
+                isMr ? 'नांदेड स्थानकावरून कंधार/कल्लाळीसाठी वाहने उपलब्ध' : 'Taxi or bus available from Nanded Station to Kandhar/Kallali',
               ]}
               mapsUrl={`https://www.google.com/maps/dir//Nanded+Railway+Station+Nanded+Maharashtra/@19.1617,77.3048,12z`}
               mapsLabel="Nanded Station on Maps"
@@ -323,9 +666,8 @@ export default function Home() {
               details={[
                 t.visit.distanceFromNanded,
                 t.visit.travelTimeAir,
-                'Airport: Shri Guru Gobind Singh Ji Airport (NDC), Nanded',
-                'Direct flights from Mumbai (1h 15m), Hyderabad (1h)',
-                'Taxi from airport to Mukhed (~2 hrs, ~65 km)',
+                isMr ? 'विमानतळ: श्री गुरु गोबिंद सिंगजी विमानतळ (NDC), नांदेड' : 'Airport: Shri Guru Gobind Singh Ji Airport (NDC), Nanded',
+                isMr ? 'हैद्राबाद विमानतळ सुमारे २६० कि.मी. अंतरावर' : 'Rajiv Gandhi International Airport (HYD) ~260 km',
               ]}
               mapsUrl={`https://www.google.com/maps/dir//Shri+Guru+Gobind+Singh+Ji+Airport+Nanded/@19.1867,77.3167,12z`}
               mapsLabel="Nanded Airport on Maps"
@@ -333,13 +675,46 @@ export default function Home() {
           </div>
 
           {/* Google Maps Embed */}
-          <div style={{ marginTop: '2.5rem', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--line)', boxShadow: '0 8px 24px -8px rgba(0,0,0,.1)' }}>
-            <div style={{ background: 'var(--maroon-2)', color: 'var(--on-dark)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--gold)' }}>
-              <h3 style={{ fontFamily: 'var(--display)', color: 'var(--gold-bright)', margin: 0, fontSize: '1.25rem' }}>
+          <div
+            style={{
+              marginTop: '2.5rem',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              border: '1px solid var(--line)',
+              boxShadow: '0 8px 24px -8px rgba(0,0,0,.1)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--maroon-2)',
+                color: 'var(--on-dark)',
+                padding: '1rem 1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                borderBottom: '2px solid var(--gold)',
+              }}
+            >
+              <h3
+                style={{
+                  fontFamily: 'var(--display)',
+                  color: 'var(--gold-bright)',
+                  margin: 0,
+                  fontSize: '1.25rem',
+                }}
+              >
                 🗺️ {t.visit.mapEmbedTitle}
               </h3>
-              <a href={MAPS} target="_blank" rel="noopener noreferrer" className="btn light small" style={{ textDecoration: 'none' }}>
-                Open Full Map
+              <a
+                href={MAPS}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn light small"
+                style={{ textDecoration: 'none' }}
+              >
+                {t.visit.mapsBtn}
               </a>
             </div>
             <div style={{ width: '100%', aspectRatio: '16/9', minHeight: '350px' }}>
@@ -358,46 +733,66 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="sec alt" id="gallery">
+      {/* ── 8. GALLERY PREVIEW ────────────────────────────────────── */}
+      <section className="sec" id="gallery">
         <div className="wrap">
           <SectionHead eyebrow={t.gallery.eyebrow} title={t.gallery.title}>
-            <p>{t.gallery.desc1}<Link to="/gallery?tab=upload">{t.gallery.descLink}</Link>{t.gallery.desc2}</p>
+            <p>
+              {t.gallery.desc1}
+              <Link to="/gallery?tab=upload">{t.gallery.descLink}</Link>
+              {t.gallery.desc2}
+            </p>
           </SectionHead>
 
           {/* Media Filter Tabs */}
-          <div className="media-type-toggle" style={{ margin: '0 auto', maxWidth: '100%', overflowX: 'auto' }}>
+          <div
+            className="media-type-toggle"
+            style={{ margin: '0 auto', maxWidth: '100%', overflowX: 'auto' }}
+          >
             <button
               type="button"
               className={`media-toggle-btn${activeMediaTab === 'all' ? ' active' : ''}`}
               onClick={() => setActiveMediaTab('all')}
             >
-              🌟 All ({galleryPhotos.length + galleryVideos.length})
+              🌟 {isMr ? 'सर्व' : 'All'} ({galleryPhotos.length + galleryVideos.length})
             </button>
             <button
               type="button"
               className={`media-toggle-btn${activeMediaTab === 'photos' ? ' active' : ''}`}
               onClick={() => setActiveMediaTab('photos')}
             >
-              🖼️ Photos ({galleryPhotos.length})
+              🖼️ {t.gallery.photosTab} ({galleryPhotos.length})
             </button>
             <button
               type="button"
               className={`media-toggle-btn${activeMediaTab === 'videos' ? ' active' : ''}`}
               onClick={() => setActiveMediaTab('videos')}
             >
-              🎬 Videos ({galleryVideos.length})
+              🎬 {t.gallery.videosTab} ({galleryVideos.length})
             </button>
           </div>
 
           {/* Photos Block */}
           {(activeMediaTab === 'all' || activeMediaTab === 'photos') && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  borderBottom: '1px solid var(--line)',
+                  paddingBottom: '.5rem',
+                  flexWrap: 'wrap',
+                }}
+              >
                 <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                  <span>🖼️</span> {lang === 'mr' ? 'सर्व छायाचित्रे' : 'Photo Gallery'}
+                  <span>🖼️</span> {isMr ? 'छायाचित्र दर्शन' : 'Photo Gallery'}
                   <span className="gal-count">{galleryPhotos.length}</span>
                 </h3>
-                <Link to="/gallery" className="btn small">{t.gallery.viewAll}</Link>
+                <Link to="/gallery" className="btn small">
+                  {t.gallery.viewAll}
+                </Link>
               </div>
 
               {galleryPhotos.length > 0 ? (
@@ -407,10 +802,18 @@ export default function Home() {
                       key={photo.id}
                       className="photo-card"
                       role="listitem"
-                      onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
+                      onClick={() => {
+                        setLightboxIndex(idx);
+                        setLightboxOpen(true);
+                      }}
                       style={{ cursor: 'pointer' }}
                     >
-                      <img src={photo.imageUrl} alt={photo.caption || `Temple photo by ${photo.uploaderName}`} loading="lazy" className="photo-img" />
+                      <img
+                        src={photo.imageUrl}
+                        alt={photo.caption || `Temple photo by ${photo.uploaderName}`}
+                        loading="lazy"
+                        className="photo-img"
+                      />
                       <figcaption className="photo-caption">
                         {photo.caption && <span className="cap-text">{photo.caption}</span>}
                         <div className="photo-meta">
@@ -418,7 +821,10 @@ export default function Home() {
                           {photo.event !== 'General' && <span className="event-tag">{photo.event}</span>}
                           <button
                             className="like-btn"
-                            onClick={(e) => { e.stopPropagation(); likePhoto(photo.id, idx); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              likePhoto(photo.id, idx);
+                            }}
                             aria-label="Like photo"
                           >
                             ♡ {photo.likes}
@@ -431,8 +837,10 @@ export default function Home() {
               ) : (
                 <div className="gal-empty" style={{ padding: '2rem 1rem' }}>
                   <div className="gal-empty-icon">🖼️</div>
-                  <p>No photos yet.</p>
-                  <Link to="/gallery?tab=upload" className="btn primary small">Upload a photo</Link>
+                  <p>{isMr ? 'अद्याप छायाचित्रे उपलब्ध नाहीत.' : 'No photos uploaded yet.'}</p>
+                  <Link to="/gallery?tab=upload" className="btn primary small">
+                    {t.gallery.sharePhoto}
+                  </Link>
                 </div>
               )}
             </div>
@@ -441,12 +849,24 @@ export default function Home() {
           {/* Videos Block */}
           {(activeMediaTab === 'all' || activeMediaTab === 'videos') && (
             <div style={{ display: 'grid', gap: '1rem', marginTop: activeMediaTab === 'all' ? '1.5rem' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  borderBottom: '1px solid var(--line)',
+                  paddingBottom: '.5rem',
+                  flexWrap: 'wrap',
+                }}
+              >
                 <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                  <span>🎬</span> {lang === 'mr' ? 'व्हिडिओ दर्शन' : 'Video Gallery'}
+                  <span>🎬</span> {isMr ? 'व्हिडिओ दर्शन' : 'Video Gallery'}
                   <span className="gal-count">{galleryVideos.length}</span>
                 </h3>
-                <Link to="/gallery?tab=videos" className="btn small">View all videos</Link>
+                <Link to="/gallery?tab=videos" className="btn small">
+                  {isMr ? 'सर्व व्हिडिओ पहा' : 'View All Videos'}
+                </Link>
               </div>
 
               {galleryVideos.length > 0 ? (
@@ -456,14 +876,25 @@ export default function Home() {
                       key={video.id}
                       className="video-card"
                       role="listitem"
-                      onClick={() => { setVideoLightboxIndex(idx); setVideoLightboxOpen(true); }}
+                      onClick={() => {
+                        setVideoLightboxIndex(idx);
+                        setVideoLightboxOpen(true);
+                      }}
                     >
                       <div className="video-thumb-wrap">
-                        {video.thumbnailUrl
-                          ? <img src={video.thumbnailUrl} alt={video.caption || `Video by ${video.uploaderName}`} loading="lazy" className="video-thumb" />
-                          : <div className="video-thumb-placeholder">🎬</div>
-                        }
-                        <div className="video-play-btn" aria-hidden="true">▶</div>
+                        {video.thumbnailUrl ? (
+                          <img
+                            src={video.thumbnailUrl}
+                            alt={video.caption || `Video by ${video.uploaderName}`}
+                            loading="lazy"
+                            className="video-thumb"
+                          />
+                        ) : (
+                          <div className="video-thumb-placeholder">🎬</div>
+                        )}
+                        <div className="video-play-btn" aria-hidden="true">
+                          ▶
+                        </div>
                       </div>
                       <figcaption className="photo-caption">
                         {video.caption && <span className="cap-text">{video.caption}</span>}
@@ -472,7 +903,10 @@ export default function Home() {
                           {video.event !== 'General' && <span className="event-tag">{video.event}</span>}
                           <button
                             className="like-btn"
-                            onClick={(e) => { e.stopPropagation(); likeVideo(video.id, idx); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              likeVideo(video.id, idx);
+                            }}
                             aria-label="Like video"
                           >
                             ♡ {video.likes}
@@ -485,63 +919,256 @@ export default function Home() {
               ) : (
                 <div className="gal-empty" style={{ padding: '2rem 1rem' }}>
                   <div className="gal-empty-icon">🎬</div>
-                  <p>No videos yet.</p>
-                  <Link to="/gallery?tab=upload" className="btn primary small">Upload a video</Link>
+                  <p>{isMr ? 'अद्याप व्हिडिओ उपलब्ध नाहीत.' : 'No videos uploaded yet.'}</p>
+                  <Link to="/gallery?tab=upload" className="btn primary small">
+                    {t.gallery.sharePhoto}
+                  </Link>
                 </div>
               )}
             </div>
           )}
 
-          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.5rem' }}>
-            <Link to="/gallery" className="btn primary">{t.gallery.viewAll}</Link>
-            <Link to="/gallery?tab=upload" className="btn">{t.gallery.sharePhoto}</Link>
+          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.75rem' }}>
+            <Link to="/gallery" className="btn primary">
+              {t.gallery.viewAll}
+            </Link>
+            <Link to="/gallery?tab=upload" className="btn">
+              {t.gallery.sharePhoto}
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="sec contact" id="contact">
+      {/* ── 9. CONTACT & INTERACTIVE ENQUIRY FORM ─────────────────── */}
+      <section className="sec alt contact" id="contact">
         <div className="wrap">
           <SectionHead eyebrow={t.contact.eyebrow} title={t.contact.title}>
             <p>{t.contact.desc}</p>
           </SectionHead>
-          <div className="split">
-            <dl>
-              <dt>{t.contact.person}</dt><dd>{c.person || <Tbc>Trustee / administrator</Tbc>}</dd>
-              <dt>{t.contact.phone}</dt><dd>{c.phone ? <a href={`tel:${c.phone}`}>{c.phone}</a> : <Tbc>Official number</Tbc>}</dd>
-              <dt>{t.contact.email}</dt><dd>{c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : <Tbc>Official email</Tbc>}</dd>
-              <dt>{t.contact.address}</dt><dd style={{ whiteSpace: 'pre-line' }}>{t.contact.addressVal}</dd>
-            </dl>
-            <div className="cols">
-              <div className="card">
-                <h3>{t.contact.card1Title}</h3>
-                <p>{t.contact.card1Text}</p>
-                <Link to="/donate">{t.contact.card1Link}</Link>
+
+          <div className="split" style={{ alignItems: 'start', gap: '2.5rem' }}>
+            {/* Left: Contact Details & Quick Cards */}
+            <div style={{ display: 'grid', gap: '1.5rem' }}>
+              <dl style={{ margin: 0 }}>
+                <dt>{t.contact.person}</dt>
+                <dd>{c.person}</dd>
+                <dt>{t.contact.phone}</dt>
+                <dd>
+                  <a href={`tel:${c.phone}`}>{c.phone}</a>
+                </dd>
+                <dt>{t.contact.email}</dt>
+                <dd>
+                  <a href={`mailto:${c.email}`}>{c.email}</a>
+                </dd>
+                <dt>{t.contact.address}</dt>
+                <dd style={{ whiteSpace: 'pre-line' }}>{t.contact.addressVal}</dd>
+              </dl>
+
+              <div className="cols" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                <div className="card">
+                  <h3>{t.contact.card1Title}</h3>
+                  <p>{t.contact.card1Text}</p>
+                  <Link to="/donate" style={{ fontWeight: 600 }}>{t.contact.card1Link} →</Link>
+                </div>
+                <div className="card">
+                  <h3>{t.contact.card2Title}</h3>
+                  <p>{t.contact.card2Text}</p>
+                </div>
               </div>
-              <div className="card">
-                <h3>{t.contact.card2Title}</h3>
-                <p>{t.contact.card2Text}</p>
-              </div>
+            </div>
+
+            {/* Right: Interactive Contact Enquiry Form */}
+            <div
+              className="card"
+              style={{
+                padding: '2rem',
+                background: 'var(--card)',
+                borderRadius: '16px',
+                border: '1px solid var(--line)',
+                boxShadow: '0 8px 24px -10px rgba(0,0,0,0.08)',
+              }}
+            >
+              <h3 style={{ fontSize: '1.3rem', color: 'var(--heading)', marginBottom: '0.4rem' }}>
+                {t.contact.formTitle}
+              </h3>
+              <p className="small muted" style={{ marginBottom: '1.25rem' }}>
+                {t.contact.formDesc}
+              </p>
+
+              {enquirySuccess && (
+                <div
+                  style={{
+                    background: 'var(--good-bg)',
+                    color: 'var(--good)',
+                    padding: '0.9rem 1.2rem',
+                    borderRadius: '8px',
+                    marginBottom: '1.2rem',
+                    border: '1px solid rgba(46,125,50,0.3)',
+                    fontWeight: 500,
+                  }}
+                >
+                  ✓ {t.contact.successMsg}
+                </div>
+              )}
+
+              {enquiryError && (
+                <div
+                  style={{
+                    background: 'var(--danger-bg)',
+                    color: 'var(--danger)',
+                    padding: '0.8rem 1.2rem',
+                    borderRadius: '8px',
+                    marginBottom: '1.2rem',
+                    border: '1px solid rgba(192,57,43,0.3)',
+                  }}
+                >
+                  ✕ {enquiryError}
+                </div>
+              )}
+
+              <form onSubmit={handleEnquirySubmit} style={{ display: 'grid', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="field">
+                    <label htmlFor="enq-name" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.3rem' }}>
+                      {t.contact.nameLabel} *
+                    </label>
+                    <input
+                      id="enq-name"
+                      type="text"
+                      required
+                      value={enquiryForm.name}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })}
+                      placeholder={isMr ? 'उदा. ज्ञानेश्वर पाटील' : 'e.g. Ramesh Patil'}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit' }}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label htmlFor="enq-phone" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.3rem' }}>
+                      {t.contact.phoneLabel} *
+                    </label>
+                    <input
+                      id="enq-phone"
+                      type="tel"
+                      required
+                      value={enquiryForm.phone}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
+                      placeholder="9876543210"
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="field">
+                    <label htmlFor="enq-email" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.3rem' }}>
+                      {t.contact.emailLabel}
+                    </label>
+                    <input
+                      id="enq-email"
+                      type="email"
+                      value={enquiryForm.email}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
+                      placeholder="devotee@example.com"
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit' }}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label htmlFor="enq-type" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.3rem' }}>
+                      {t.contact.typeLabel}
+                    </label>
+                    <select
+                      id="enq-type"
+                      value={enquiryForm.type}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, type: e.target.value })}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit' }}
+                    >
+                      <option value="General">{t.contact.typeOptions.general}</option>
+                      <option value="Temple Visit">{t.contact.typeOptions.visit}</option>
+                      <option value="Worship / Pooja">{t.contact.typeOptions.pooja}</option>
+                      <option value="Yatra">{t.contact.typeOptions.yatra}</option>
+                      <option value="Donation">{t.contact.typeOptions.donation}</option>
+                      <option value="Other">{t.contact.typeOptions.other}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="enq-msg" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.3rem' }}>
+                    {t.contact.messageLabel} *
+                  </label>
+                  <textarea
+                    id="enq-msg"
+                    rows="4"
+                    required
+                    value={enquiryForm.message}
+                    onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
+                    placeholder={t.contact.messagePlaceholder}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--fg)', font: 'inherit', resize: 'vertical' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={enquiryLoading}
+                  className="btn primary"
+                  style={{ justifySelf: 'start', minWidth: '150px' }}
+                >
+                  {enquiryLoading ? t.contact.sending : t.contact.sendBtn}
+                </button>
+              </form>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── PHOTO LIGHTBOX ─────────────────────────────────── */}
+      {/* ── PHOTO LIGHTBOX ────────────────────────────────────────── */}
       {lightboxOpen && currentPhoto && (
-        <div className="lightbox" onClick={() => setLightboxOpen(false)} role="dialog" aria-modal="true" aria-label="Photo view">
-          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">✕</button>
-          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i - 1 + galleryPhotos.length) % galleryPhotos.length); }} aria-label="Previous">‹</button>
-          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i + 1) % galleryPhotos.length); }} aria-label="Next">›</button>
+        <div
+          className="lightbox"
+          onClick={() => setLightboxOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo view"
+        >
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="Close">
+            ✕
+          </button>
+          <button
+            className="lightbox-nav prev"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((i) => (i - 1 + galleryPhotos.length) % galleryPhotos.length);
+            }}
+            aria-label="Previous"
+          >
+            ‹
+          </button>
+          <button
+            className="lightbox-nav next"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((i) => (i + 1) % galleryPhotos.length);
+            }}
+            aria-label="Next"
+          >
+            ›
+          </button>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img src={currentPhoto.imageUrl} alt={currentPhoto.caption || `Photo by ${currentPhoto.uploaderName}`} />
             <div className="lightbox-info">
               <p>{currentPhoto.caption || <span className="muted">No caption</span>}</p>
               <div className="lightbox-meta">
                 <span>🙏 {currentPhoto.uploaderName}</span>
-                {currentPhoto.event !== 'General' && <span className="event-tag">{currentPhoto.event}</span>}
+                {currentPhoto.event && currentPhoto.event !== 'General' && <span className="event-tag">{currentPhoto.event}</span>}
                 <span className="muted">{fmtDate(currentPhoto.createdAt)}</span>
               </div>
-              <button className="like-btn" style={{ marginTop: '.5rem', fontSize: '1.1rem' }} onClick={() => likePhoto(currentPhoto.id, lightboxIndex)}>
+              <button
+                className="like-btn"
+                style={{ marginTop: '.5rem', fontSize: '1.1rem' }}
+                onClick={() => likePhoto(currentPhoto.id, lightboxIndex)}
+              >
                 ♡ {currentPhoto.likes} likes
               </button>
             </div>
@@ -549,22 +1176,52 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── VIDEO LIGHTBOX ─────────────────────────────────── */}
+      {/* ── VIDEO LIGHTBOX ────────────────────────────────────────── */}
       {videoLightboxOpen && currentVideo && (
-        <div className="lightbox" onClick={() => setVideoLightboxOpen(false)} role="dialog" aria-modal="true" aria-label="Video view">
-          <button className="lightbox-close" onClick={() => setVideoLightboxOpen(false)} aria-label="Close">✕</button>
-          <button className="lightbox-nav prev" onClick={(e) => { e.stopPropagation(); setVideoLightboxIndex((i) => (i - 1 + galleryVideos.length) % galleryVideos.length); }} aria-label="Previous">‹</button>
-          <button className="lightbox-nav next" onClick={(e) => { e.stopPropagation(); setVideoLightboxIndex((i) => (i + 1) % galleryVideos.length); }} aria-label="Next">›</button>
+        <div
+          className="lightbox"
+          onClick={() => setVideoLightboxOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video view"
+        >
+          <button className="lightbox-close" onClick={() => setVideoLightboxOpen(false)} aria-label="Close">
+            ✕
+          </button>
+          <button
+            className="lightbox-nav prev"
+            onClick={(e) => {
+              e.stopPropagation();
+              setVideoLightboxIndex((i) => (i - 1 + galleryVideos.length) % galleryVideos.length);
+            }}
+            aria-label="Previous"
+          >
+            ‹
+          </button>
+          <button
+            className="lightbox-nav next"
+            onClick={(e) => {
+              e.stopPropagation();
+              setVideoLightboxIndex((i) => (i + 1) % galleryVideos.length);
+            }}
+            aria-label="Next"
+          >
+            ›
+          </button>
           <div className="lightbox-content lightbox-video-content" onClick={(e) => e.stopPropagation()}>
             <video src={currentVideo.videoUrl} controls autoPlay className="lightbox-video" />
             <div className="lightbox-info">
               <p>{currentVideo.caption || <span className="muted">No caption</span>}</p>
               <div className="lightbox-meta">
                 <span>🙏 {currentVideo.uploaderName}</span>
-                {currentVideo.event !== 'General' && <span className="event-tag">{currentVideo.event}</span>}
+                {currentVideo.event && currentVideo.event !== 'General' && <span className="event-tag">{currentVideo.event}</span>}
                 <span className="muted">{fmtDate(currentVideo.createdAt)}</span>
               </div>
-              <button className="like-btn" style={{ marginTop: '.5rem', fontSize: '1.1rem' }} onClick={() => likeVideo(currentVideo.id, videoLightboxIndex)}>
+              <button
+                className="like-btn"
+                style={{ marginTop: '.5rem', fontSize: '1.1rem' }}
+                onClick={() => likeVideo(currentVideo.id, videoLightboxIndex)}
+              >
                 ♡ {currentVideo.likes} likes
               </button>
             </div>
