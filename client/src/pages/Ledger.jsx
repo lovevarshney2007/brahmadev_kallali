@@ -3,6 +3,7 @@ import { useSite } from '../SiteContext.jsx';
 import { api, inr, fmtDate } from '../api.js';
 import { SectionHead } from '../components/Decor.jsx';
 import Bars from '../components/Bars.jsx';
+import PhotoGrid from '../components/PhotoGrid.jsx';
 
 export default function Ledger() {
   const { summary, lang, t } = useSite();
@@ -153,6 +154,18 @@ export default function Ledger() {
             </div>
           )}
         </div>
+
+        {/* Dean Visits Gallery */}
+        <section className="sec alt" id="visits-gallery" style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid var(--line)' }}>
+          <div className="wrap">
+            <SectionHead eyebrow={isMr ? "दर्शन व भेट" : "Visits & Darshan"} title={isMr ? "माननीयांची भेटी व विशेष क्षण" : "Distinguished Visits & Special Moments"} />
+            <PhotoGrid
+              title={isMr ? "भेटी दालन" : "Visits Gallery"}
+              subtitle={isMr ? "माननीय महानुभावांकडून केलेल्या भेटीची झलक" : "Glimpses of visits by distinguished guests"}
+              emptyMessage={isMr ? "अद्याप कोणतीही भेटीचे छायाचित्र उपलब्ध नाहीत." : "No visit photos available yet."}
+            />
+          </div>
+        </section>
       </div>
     </section>
   );

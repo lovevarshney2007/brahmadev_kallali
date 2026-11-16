@@ -30,6 +30,10 @@ export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) 
     if (!res.ok) {
       const err = new Error(data?.error || `Request failed (${res.status})`);
       err.status = res.status;
+      // Include full response data for better error handling (e.g., duplicate photo info)
+      if (data) {
+        Object.assign(err, data);
+      }
       throw err;
     }
     return data;

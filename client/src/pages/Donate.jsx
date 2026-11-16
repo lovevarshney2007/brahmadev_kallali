@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { useSite } from '../SiteContext.jsx';
 import { api, inr, UPI_RE } from '../api.js';
 import { SectionHead, Tbc } from '../components/Decor.jsx';
+import QRPlaceholder from '../components/QRPlaceholder.jsx';
 
 const PRESETS = [101, 251, 501, 1101, 2101];
 
@@ -120,16 +120,14 @@ export default function Donate() {
               <label className="sr-only" htmlFor="customAmt">{t.donatePage.otherAmount}</label>
               <input id="customAmt" type="number" min="1" placeholder={isMr ? "इतर ₹" : "Other ₹"} value={custom} onChange={(e) => setCustom(e.target.value)} />
             </div>
-            <div className="qr-frame">
-              {upiUri ? <QRCodeSVG value={upiUri} size={216} level="M" marginSize={0} /> : (isMr ? 'अधिकृत UPI ID जोडल्यानंतर ट्रस्टचा QR कोड येथे दिसेल.' : 'The trust’s official QR code will appear here once its UPI ID is added.')}
-            </div>
-            <div className="upi-line">
-              {upiUri ? (
-                <>UPI ID: <strong>{upi}</strong><button className="copy" type="button" onClick={copyUpi}>{copied ? (isMr ? 'कॉपी झाले' : 'Copied') : (isMr ? 'कॉपी करा' : 'Copy')}</button>{finalAmount > 0 && <> · {inr(finalAmount)}</>}</>
-              ) : <span className="tbc" style={{ color: 'var(--gold-bright)', borderColor: 'var(--gold-bright)' }}>{isMr ? 'UPI ID लवकरच जोडले जाईल' : 'UPI ID to be confirmed'}</span>}
-            </div>
-            {upiUri && <a className="btn light small" href={upiUri}>{isMr ? 'UPI ॲपमध्ये उघडा' : 'Open in UPI app (on phone)'}</a>}
-            <small>{isMr ? 'QR कोडने दान दिल्यानंतर, पावतीसाठी आणि हिशोबात नाव नोंदवण्यासाठी कृपया नाव व रक्कम मंदिर कार्यालयाला कळवावी.' : 'After paying by QR, please send your name, amount and UPI reference to the temple office so your receipt can be issued and your daan added to the ledger.'}</small>
+            <QRPlaceholder
+              upiId={upi}
+              upiUri={upiUri}
+              payeeName={settings.payeeName || 'Shri Brahmadev Devasthan'}
+              amount={finalAmount}
+              size={216}
+              showAmount={true}
+            />
           </div>
 
           <div className="prose">

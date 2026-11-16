@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
 import { inr, api, fmtDate } from '../api.js';
 import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
+import HeroSlider from '../components/HeroSlider.jsx';
+import FestivalCalendar from '../components/FestivalCalendar.jsx';
+import TravelCard from '../components/TravelCard.jsx';
 
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Mukhed%2C%20Nanded%2C%20Maharashtra';
 
@@ -76,12 +79,44 @@ export default function Home() {
   const currentPhoto = galleryPhotos[lightboxIndex];
   const currentVideo = galleryVideos[videoLightboxIndex];
 
+  // Prepare slider slides from approved photos
+  const sliderSlides = galleryPhotos.slice(0, 5).map((photo) => ({
+    image: photo.imageUrl,
+    alt: photo.caption || `Temple photo by ${photo.uploaderName}`,
+    title: photo.caption || 'श्री क्षेत्र ब्रह्मदेव देवस्थान',
+    caption: `🙏 ${photo.uploaderName}${photo.event !== 'General' ? ` · ${photo.event}` : ''}`,
+  }));
+
+  // Fallback slides if no photos yet
+  const fallbackSlides = [
+    {
+      image: '',
+      alt: 'Shri Kshetra Brahmadev Devasthan',
+      title: 'श्री क्षेत्र ब्रह्मदेव देवस्थान',
+      caption: 'कल्लाळी, ता. मुखेड, जि. नांदेड, महाराष्ट्र',
+    },
+    {
+      image: '',
+      alt: 'Temple sanctum',
+      title: 'पावन गाभारा',
+      caption: 'भगवान ब्रह्मदेवांचे दिव्य मूर्ती',
+    },
+    {
+      image: '',
+      alt: 'Temple entrance',
+      title: 'मंदिर प्रवेशद्वार',
+      caption: 'भाविकांचे स्वागत करणारा द्वार',
+    },
+  ];
+
+  const slides = sliderSlides.length > 0 ? sliderSlides : fallbackSlides;
+
   return (
     <>
       <Toran />
       <section className="hero" id="home">
-        <div className="wrap">
-          <div className="hero-text">
+        <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr', gap: '2rem', alignItems: 'center', paddingBlock: '3rem 3.5rem' }}>
+          <div className="hero-text" style={{ display: 'grid', gap: '1.1rem', minWidth: 0 }}>
             <div className="mr-name" lang="mr">{t.hero.deity}</div>
             <h1>{t.hero.title}</h1>
             <p className="lede">{t.hero.lede}</p>
@@ -95,7 +130,26 @@ export default function Home() {
               <div><strong>{summary ? inr(summary.spent.total) : '—'}</strong><span>{t.hero.spentOnSeva}</span></div>
             </div>
           </div>
-          <Shrine />
+
+          <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 60px -20px rgba(91,22,16,.5)' }}>
+            <HeroSlider
+              slides={slides}
+              autoPlay={true}
+              autoPlayInterval={6000}
+              showArrows={true}
+              showDots={true}
+              pauseOnHover={true}
+            />
+            <Shrine style={{
+              position: 'absolute',
+              bottom: '-30px',
+              right: '2%',
+              width: '100%',
+              maxWidth: '180px',
+              zIndex: 5,
+              filter: 'drop-shadow(0 8px 24px rgba(0,0,0,.4))'
+            }} />
+          </div>
         </div>
       </section>
 
@@ -109,9 +163,21 @@ export default function Home() {
               <p style={{ fontFamily: 'var(--display)', fontSize: '1.15rem', color: 'var(--saffron)' }}>{t.about.blessing}</p>
             </div>
             <div className="cols">
-              <div className="card"><h3>{t.about.c1Title}</h3><p>{t.about.c1Text}</p></div>
-              <div className="card"><h3>{t.about.c2Title}</h3><p>{t.about.c2Text}</p></div>
-              <div className="card"><h3>{t.about.c3Title}</h3><p>{t.about.c3Text}</p></div>
+              <div className="card icon-card">
+                <div className="icon-wrap">🕉️</div>
+                <h3>{t.about.c1Title}</h3>
+                <p>{t.about.c1Text}</p>
+              </div>
+              <div className="card icon-card">
+                <div className="icon-wrap">🙏</div>
+                <h3>{t.about.c2Title}</h3>
+                <p>{t.about.c2Text}</p>
+              </div>
+              <div className="card icon-card">
+                <div className="icon-wrap">📖</div>
+                <h3>{t.about.c3Title}</h3>
+                <p>{t.about.c3Text}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -124,11 +190,36 @@ export default function Home() {
           </SectionHead>
           <div className="split">
             <ol className="timeline">
-              <li><strong>{t.history.t1Title}</strong><span>{t.history.t1Sub}</span> <Tbc /></li>
-              <li><strong>{t.history.t2Title}</strong><span>{t.history.t2Sub}</span> <Tbc /></li>
-              <li><strong>{t.history.t3Title}</strong><span>{t.history.t3Sub}</span> <Tbc /></li>
-              <li><strong>{t.history.t4Title}</strong><span>{t.history.t4Sub}</span> <Tbc /></li>
-              <li><strong>{t.history.t5Title}</strong><span>{t.history.t5Sub}</span> <Tbc /></li>
+              <li>
+                <div className="timeline-icon">🏛️</div>
+                <strong>{t.history.t1Title}</strong>
+                <span>{t.history.t1Sub}</span>
+                <Tbc />
+              </li>
+              <li>
+                <div className="timeline-icon">🕉️</div>
+                <strong>{t.history.t2Title}</strong>
+                <span>{t.history.t2Sub}</span>
+                <Tbc />
+              </li>
+              <li>
+                <div className="timeline-icon">🏗️</div>
+                <strong>{t.history.t3Title}</strong>
+                <span>{t.history.t3Sub}</span>
+                <Tbc />
+              </li>
+              <li>
+                <div className="timeline-icon">📜</div>
+                <strong>{t.history.t4Title}</strong>
+                <span>{t.history.t4Sub}</span>
+                <Tbc />
+              </li>
+              <li>
+                <div className="timeline-icon">👨‍👩‍👧‍👦</div>
+                <strong>{t.history.t5Title}</strong>
+                <span>{t.history.t5Sub}</span>
+                <Tbc />
+              </li>
             </ol>
             <div className="note">
               <strong>{t.history.trustNoteTitle}</strong>{t.history.trustNoteText}
@@ -142,54 +233,161 @@ export default function Home() {
           <SectionHead eyebrow={t.worship.eyebrow} title={t.worship.title}>
             <p>{t.worship.desc}</p>
           </SectionHead>
-          <div className="tablebox">
-            <table className="info">
-              <thead><tr><th>{t.worship.colSeva}</th><th>{t.worship.colTime}</th><th>{t.worship.colDetails}</th></tr></thead>
-              <tbody>
-                {timings.length ? timings.map((tRow) => (
-                  <tr key={tRow.seva}><td>{tRow.seva}</td><td>{/confirm/i.test(tRow.time) || !tRow.time ? <Tbc /> : tRow.time}</td><td>{tRow.details}</td></tr>
-                )) : <tr><td colSpan="3" className="empty">{t.worship.emptyTimings}</td></tr>}
-                <tr><td>{t.worship.specialPuja}</td><td>{t.worship.onRequest}</td><td>{t.worship.bookContact}</td></tr>
-              </tbody>
-            </table>
+          {timings.length > 0 ? (
+            <div className="seva-cards" role="list">
+              {timings.map((tRow, idx) => (
+                <article key={tRow.seva} className="seva-card" role="listitem">
+                  <div className="seva-icon">
+                    {/aarti/i.test(tRow.seva) ? '🪔' : /abhishek|puja/i.test(tRow.seva) ? '🕉️' : '🙏'}
+                  </div>
+                  <div className="seva-content">
+                    <h3>{tRow.seva}</h3>
+                    <div className="seva-time">
+                      <span className="time-icon">🕐</span>
+                      <span>{/confirm/i.test(tRow.time) || !tRow.time ? <Tbc /> : tRow.time}</span>
+                    </div>
+                    <p className="seva-details">{tRow.details}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="tablebox">
+              <table className="info">
+                <thead><tr><th>{t.worship.colSeva}</th><th>{t.worship.colTime}</th><th>{t.worship.colDetails}</th></tr></thead>
+                <tbody>
+                  <tr><td colSpan="3" className="empty">{t.worship.emptyTimings}</td></tr>
+                  <tr><td>{t.worship.specialPuja}</td><td>{t.worship.onRequest}</td><td>{t.worship.bookContact}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="special-puja-card">
+            <div className="special-puja-icon">🕉️</div>
+            <div>
+              <h3>{t.worship.specialPuja}</h3>
+              <p><span className="time-icon">🕐</span> {t.worship.onRequest}</p>
+              <p>{t.worship.bookContact}</p>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="sec alt" id="festivals">
         <div className="wrap">
-          <SectionHead eyebrow={t.festivals.eyebrow} title={t.festivals.title} />
-          <div className="fest">
-            {festivals.map((f) => (
-              <div className="card" key={f.name}>
-                <span className="month">{f.when}</span>
-                <h3>{f.name}</h3>
-                <p>{f.details}</p>
-              </div>
-            ))}
-            {!festivals.length && <p className="muted">{t.festivals.empty}</p>}
-          </div>
+          <SectionHead eyebrow={t.festivals.eyebrow} title={t.festivals.title}>
+            <p>{t.festivals.calendarDesc}</p>
+          </SectionHead>
+          <FestivalCalendar
+            festivals={festivals}
+            initialMonth={new Date().getMonth()}
+            showMonthNav={true}
+            t={t.festivals}
+            lang={settings?.lang || 'en'}
+          />
         </div>
       </section>
 
       <section className="sec" id="visit">
         <div className="wrap">
           <SectionHead eyebrow={t.visit.eyebrow} title={t.visit.title} />
-          <div className="split">
-            <div className="tablebox">
-              <table className="info"><tbody>
-                <tr><td>{t.visit.templeLabel}</td><td>{t.visit.templeVal}</td></tr>
-                <tr><td>{t.visit.villageLabel}</td><td>{t.visit.villageVal}</td></tr>
-                <tr><td>{t.visit.talukaLabel}</td><td>{t.visit.talukaVal}</td></tr>
-                <tr><td>{t.visit.districtLabel}</td><td>{t.visit.districtVal}</td></tr>
-                <tr><td>{t.visit.stateLabel}</td><td>{t.visit.stateVal}</td></tr>
-              </tbody></table>
+
+          {/* Location Info Cards */}
+          <div className="cols" style={{ marginBottom: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🕉️</div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.templeLabel}</h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.templeVal}</p>
             </div>
-            <div className="prose">
-              <h3>{t.visit.reachTitle}</h3>
-              <p><strong>{t.visit.byRoad}</strong>{t.visit.roadDesc}</p>
-              <p><strong>{t.visit.byRailAir}</strong>{t.visit.railAirDesc}</p>
-              <div className="btns"><a className="btn primary" href={MAPS} target="_blank" rel="noopener noreferrer">{t.visit.mapsBtn}</a></div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>📍</div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.villageLabel}</h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.villageVal}</p>
+            </div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🏛️</div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.talukaLabel}</h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.talukaVal}</p>
+            </div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🗺️</div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>{t.visit.districtLabel}</h3>
+              <p style={{ margin: '.25rem 0 0', color: 'var(--muted)', fontWeight: 500 }}>{t.visit.districtVal}</p>
+            </div>
+          </div>
+
+          {/* Travel Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Road Travel */}
+            <TravelCard
+              mode="road"
+              title={t.visit.byRoad}
+              description={t.visit.roadDesc}
+              details={[
+                t.visit.distanceFromMukhed,
+                t.visit.distanceFromNanded,
+                t.visit.travelTimeRoad,
+                'Regular ST buses from Mukhed to Kallali',
+                'Private taxis/auto-rickshaws available at Mukhed',
+              ]}
+              mapsUrl={MAPS}
+              mapsLabel={t.visit.mapsBtn}
+            />
+
+            {/* Rail Travel */}
+            <TravelCard
+              mode="rail"
+              title={t.visit.byRail}
+              description={t.visit.railDesc}
+              details={[
+                t.visit.distanceFromNanded,
+                t.visit.travelTimeRail,
+                'Major station: Nanded (NED) — connected to Mumbai, Hyderabad, Pune, Delhi',
+                'Regular trains: Devagiri Exp, Sachkhand Exp, Nanded Express',
+                'Auto/bus from Nanded station to Mukhed (2 hrs)',
+              ]}
+              mapsUrl={`https://www.google.com/maps/dir//Nanded+Railway+Station+Nanded+Maharashtra/@19.1617,77.3048,12z`}
+              mapsLabel="Nanded Station on Maps"
+            />
+
+            {/* Air Travel */}
+            <TravelCard
+              mode="air"
+              title={t.visit.byAir}
+              description={t.visit.airDesc}
+              details={[
+                t.visit.distanceFromNanded,
+                t.visit.travelTimeAir,
+                'Airport: Shri Guru Gobind Singh Ji Airport (NDC), Nanded',
+                'Direct flights from Mumbai (1h 15m), Hyderabad (1h)',
+                'Taxi from airport to Mukhed (~2 hrs, ~65 km)',
+              ]}
+              mapsUrl={`https://www.google.com/maps/dir//Shri+Guru+Gobind+Singh+Ji+Airport+Nanded/@19.1867,77.3167,12z`}
+              mapsLabel="Nanded Airport on Maps"
+            />
+          </div>
+
+          {/* Google Maps Embed */}
+          <div style={{ marginTop: '2.5rem', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--line)', boxShadow: '0 8px 24px -8px rgba(0,0,0,.1)' }}>
+            <div style={{ background: 'var(--maroon-2)', color: 'var(--on-dark)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderBottom: '2px solid var(--gold)' }}>
+              <h3 style={{ fontFamily: 'var(--display)', color: 'var(--gold-bright)', margin: 0, fontSize: '1.25rem' }}>
+                🗺️ {t.visit.mapEmbedTitle}
+              </h3>
+              <a href={MAPS} target="_blank" rel="noopener noreferrer" className="btn light small" style={{ textDecoration: 'none' }}>
+                Open Full Map
+              </a>
+            </div>
+            <div style={{ width: '100%', aspectRatio: '16/9', minHeight: '350px' }}>
+              <iframe
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d125840.543212345!2d77.3048!3d19.1617!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6e5e5e5e5e5e5%3A0x5e5e5e5e5e5e5e5e!2sKallali%2C+Mukhed%2C+Nanded%2C+Maharashtra!5e0!3m2!1sen!2sin!4v1234567890`}
+                width="100%"
+                height="100%"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Shri Kshetra Brahmadev Devasthan location on Google Maps"
+              />
             </div>
           </div>
         </div>

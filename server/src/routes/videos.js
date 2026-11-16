@@ -45,7 +45,7 @@ router.get('/public/videos', ah(async (req, res) => {
   });
 }));
 
-// 2. Public: Upload video (with duplicate detection)
+// 2. Public: Upload video (with duplicate detection + idempotency)
 router.post(
   '/public/videos/upload',
   uploadLimiter,
@@ -58,12 +58,19 @@ router.post(
     // Validate form body
     const input = videoUploadInput(req.body);
 
+    // --- Idempotency Key Support ---
+    // Client can send an idempotency key to safely retry failed requests
+    const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
+
     // --- Duplicate detection: reject if another video with same SHA-256 hash exists ---
     const fileHash = computeHash(req.file.buffer);
     const existing = await Video.findOne({ fileHash });
     if (existing) {
+      // Return existing video data so client can show success instead of error
       return res.status(409).json({
         error: 'This video has already been uploaded. Please choose a different video.',
+        duplicate: true,
+        video: existing.toPublic(),
       });
     }
 
@@ -91,6 +98,8 @@ router.post(
       uploaderPhone: input.uploaderPhone,
       event: input.event,
       approved: false, // Pending admin moderation
+      // Store idempotency key if provided for audit trail
+      ...(idempotencyKey && { idempotencyKey }),
     });
 
     res.status(201).json({

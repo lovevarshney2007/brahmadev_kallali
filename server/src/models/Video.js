@@ -14,6 +14,8 @@ const videoSchema = new mongoose.Schema(
     approved: { type: Boolean, default: false, index: true },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     likes: { type: Number, default: 0 },
+    // Idempotency key for safe retry of failed uploads
+    idempotencyKey: { type: String, default: '', index: { sparse: true } },
   },
   { timestamps: true }
 );

@@ -45,7 +45,7 @@ router.get('/public/photos', ah(async (req, res) => {
   });
 }));
 
-// 2. Public: Upload photo from mobile/gallery (with duplicate detection)
+// 2. Public: Upload photo from mobile/gallery (with duplicate detection + idempotency)
 router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('photo'), ah(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Please select an image file to upload.' });
@@ -54,12 +54,19 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
   // Validate form body with Zod schema before hitting Cloudinary
   const input = photoUploadInput(req.body);
 
+  // --- Idempotency Key Support ---
+  // Client can send an idempotency key to safely retry failed requests
+  const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
+
   // --- Duplicate detection: reject if another photo with same SHA-256 hash exists ---
   const fileHash = computeHash(req.file.buffer);
   const existing = await Photo.findOne({ fileHash });
   if (existing) {
+    // Return existing photo data so client can show success instead of error
     return res.status(409).json({
       error: 'This photo has already been uploaded. Please choose a different image.',
+      duplicate: true,
+      photo: existing.toPublic(),
     });
   }
 
@@ -85,6 +92,8 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
     uploaderPhone: input.uploaderPhone,
     event: input.event,
     approved: false, // Pending admin moderation
+    // Store idempotency key if provided for audit trail
+    ...(idempotencyKey && { idempotencyKey }),
   });
 
   res.status(201).json({

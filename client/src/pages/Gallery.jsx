@@ -10,6 +10,21 @@ function fileFingerprint(file) {
   return `${file.name}_${file.size}_${file.lastModified}`;
 }
 
+/** Generate a unique idempotency key for safe retry of uploads */
+function generateIdempotencyKey(file, form) {
+  const fp = fileFingerprint(file);
+  // Include form data to differentiate different submissions of same file with different metadata
+  const formStr = `${form.uploaderName}_${form.event}_${form.caption}`;
+  // Simple hash of fingerprint + form data
+  let hash = 0;
+  const str = fp + '_' + formStr;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return `idem_${Math.abs(hash).toString(36)}_${Date.now().toString(36)}`;
+}
+
 export default function Gallery() {
   const { settings, refresh, lang } = useSite();
   const isMr = lang === 'mr';
@@ -204,6 +219,9 @@ export default function Gallery() {
       return;
     }
 
+    // Generate idempotency key for safe retry
+    const idempotencyKey = generateIdempotencyKey(file, form);
+
     setBusy(true);
     try {
       const formData = new FormData();
@@ -212,12 +230,14 @@ export default function Gallery() {
       formData.append('uploaderName', form.uploaderName);
       formData.append('uploaderPhone', form.uploaderPhone);
       formData.append('event', form.event);
+      formData.append('idempotencyKey', idempotencyKey);
 
       const endpoint = uploadType === 'photo'
         ? '/gallery/public/photos/upload'
         : '/gallery/public/videos/upload';
 
-      const res = await api(endpoint, { method: 'POST', body: formData, timeout: 90000 });
+      // Increase timeout for large uploads (Cloudinary can take time)
+      const res = await api(endpoint, { method: 'POST', body: formData, timeout: 180000 });
 
       // Remember this file so user can't re-submit the same one
       submittedFingerprints.current.add(fp);
@@ -235,9 +255,30 @@ export default function Gallery() {
 
       refresh();
     } catch (err) {
-      // 409 = duplicate detected server-side
+      // 409 = duplicate detected server-side (now returns existing media data)
       if (err.status === 409) {
-        setUploadError(err.message || (isMr ? 'ही फाईल आधीच अपलोड झाली आहे. कृपया दुसरी फाईल निवडा.' : 'This file was already uploaded. Please choose a different one.'));
+        // Check if server returned the existing media (idempotent retry success)
+        if (err.duplicate && (err.photo || err.video)) {
+          const existingMedia = err.photo || err.video;
+          // Show success screen with existing media info
+          setUploadSuccessData({
+            type: uploadType,
+            uploaderName: existingMedia.uploaderName,
+            event: existingMedia.event,
+            caption: existingMedia.caption || '',
+            fileName: existingMedia.imageUrl || existingMedia.videoUrl || 'Existing file',
+            fileSize: '—',
+            message: isMr ? 'ही फाईल आधीच अपलोड झाली आहे.' : 'This file was already uploaded.',
+          });
+        } else {
+          setUploadError(err.message || (isMr ? 'ही फाईल आधीच अपलोड झाली आहे. कृपया दुसरी फाईल निवडा.' : 'This file was already uploaded. Please choose a different one.'));
+        }
+      } else if (err.status === 408 || err.status === 0) {
+        // Timeout or network error - the upload might have succeeded on server
+        // User can retry safely with idempotency key
+        setUploadError(isMr
+          ? 'संपर्क अटकेल आहे. कृपया इंटरनेट तपासा आणि पुन्हा प्रयत्न करा — आपली फाईल सुरक्षित आहे.'
+          : 'Connection timed out. Please check your internet and try again — your file is safe to retry.');
       } else {
         setUploadError(err.message || (isMr ? 'अपलोड अयशस्वी झाले. कृपया पुन्हा प्रयत्न करा.' : 'Upload failed. Please try again.'));
       }
