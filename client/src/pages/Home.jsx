@@ -79,37 +79,13 @@ export default function Home() {
   const currentPhoto = galleryPhotos[lightboxIndex];
   const currentVideo = galleryVideos[videoLightboxIndex];
 
-  // Prepare slider slides from approved photos
-  const sliderSlides = galleryPhotos.slice(0, 5).map((photo) => ({
+  // Prepare slider slides from approved photos only (HeroSlider handles empty state itself)
+  const slides = galleryPhotos.slice(0, 5).map((photo) => ({
     image: photo.imageUrl,
     alt: photo.caption || `Temple photo by ${photo.uploaderName}`,
     title: photo.caption || 'श्री क्षेत्र ब्रह्मदेव देवस्थान',
     caption: `🙏 ${photo.uploaderName}${photo.event !== 'General' ? ` · ${photo.event}` : ''}`,
   }));
-
-  // Fallback slides if no photos yet
-  const fallbackSlides = [
-    {
-      image: '',
-      alt: 'Shri Kshetra Brahmadev Devasthan',
-      title: 'श्री क्षेत्र ब्रह्मदेव देवस्थान',
-      caption: 'कल्लाळी, ता. मुखेड, जि. नांदेड, महाराष्ट्र',
-    },
-    {
-      image: '',
-      alt: 'Temple sanctum',
-      title: 'पावन गाभारा',
-      caption: 'भगवान ब्रह्मदेवांचे दिव्य मूर्ती',
-    },
-    {
-      image: '',
-      alt: 'Temple entrance',
-      title: 'मंदिर प्रवेशद्वार',
-      caption: 'भाविकांचे स्वागत करणारा द्वार',
-    },
-  ];
-
-  const slides = sliderSlides.length > 0 ? sliderSlides : fallbackSlides;
 
   return (
     <>
