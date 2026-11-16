@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
 import { inr, api, fmtDate } from '../api.js';
 import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
+import Bars from '../components/Bars.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
 
@@ -554,6 +555,30 @@ export default function Home() {
               </strong>
             </div>
           </div>
+
+          {/* Compact Category-wise Expenditure Chart (Handoff requirement) */}
+          {summary?.spent?.byPurpose?.length > 0 && (
+            <div
+              className="panel"
+              style={{
+                marginTop: '2rem',
+                background: 'var(--card)',
+                borderRadius: '16px',
+                border: '1px solid var(--line)',
+                padding: '1.5rem',
+              }}
+            >
+              <div className="panel-head" style={{ marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--heading)', margin: 0 }}>
+                  {isMr ? 'खर्च वर्गीकरण व विनियोग' : 'Category-wise Expenditure Breakdown'}
+                </h3>
+                <span className="small muted">
+                  {isMr ? 'विश्वस्त मान्यताप्राप्त हेतूनुसार' : 'By Trust-Approved Categories'}
+                </span>
+              </div>
+              <Bars rows={summary.spent.byPurpose} total={summary.spent.total} />
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="btns" style={{ justifyContent: 'center', marginTop: '1.75rem' }}>

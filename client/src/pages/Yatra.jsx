@@ -158,9 +158,82 @@ export default function Yatra() {
                 <h2 style={{ fontSize: '1.5rem', color: 'var(--heading)', marginBottom: '0.8rem' }}>
                   {yp.scheduleHeading}
                 </h2>
-                <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
-                  {yp.scheduleNote}
+                <p style={{ color: 'var(--fg)', opacity: 0.9, lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                  {yp.scheduleIntro || yp.scheduleNote}
                 </p>
+
+                {/* Official Sample / Tentative Schedule Table */}
+                <div className="tablebox" style={{ marginBottom: '2rem' }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>{yp.colDate || 'Date'}</th>
+                        <th>{yp.colTime || 'Time'}</th>
+                        <th>{yp.colProgramme || 'Programme'}</th>
+                        <th>{yp.colVenue || 'Venue'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {
+                          date: isMr ? 'दिवस १' : 'Day 1',
+                          time: isMr ? 'सकाळ' : 'Morning',
+                          programme: isMr ? 'ध्वजारोहण व घटस्थापना पूजा' : 'Dhwajarohan & Pooja',
+                          venue: isMr ? 'मंदिर परिसर' : 'Temple premises',
+                        },
+                        {
+                          date: isMr ? 'दिवस २' : 'Day 2',
+                          time: isMr ? 'संध्याकाळ' : 'Evening',
+                          programme: isMr ? 'भव्य पालखी सोहळा व नगर प्रदक्षिणा' : 'Palkhi Sohala',
+                          venue: isMr ? 'गावातील मार्ग' : 'Village route',
+                        },
+                        {
+                          date: isMr ? 'दिवस ३' : 'Day 3',
+                          time: isMr ? 'दुपार' : 'Afternoon',
+                          programme: isMr ? 'महाप्रसाद अन्नदान व कीर्तन' : 'Mahaprasad & Kirtan',
+                          venue: isMr ? 'मंदिर प्रांगण' : 'Temple grounds',
+                        },
+                        {
+                          date: isMr ? 'दिवस ४' : 'Day 4',
+                          time: isMr ? 'संध्याकाळ' : 'Evening',
+                          programme: isMr ? 'काल्याचे कीर्तन व सांगता महाआरती' : 'Concluding Aarti',
+                          venue: isMr ? 'मंदिर गर्भगृह' : 'Temple sanctum',
+                        },
+                      ].map((row, i) => (
+                        <tr key={i}>
+                          <td><strong>{row.date}</strong></td>
+                          <td><span className="chip">{row.time}</span></td>
+                          <td>{row.programme}</td>
+                          <td className="small muted">{row.venue}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* PDF Download Button & Trust Note */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '2rem', padding: '1.2rem', background: 'var(--band)', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.8rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span style={{ fontSize: '1.5rem' }}>📄</span>
+                      <strong>{isMr ? 'अधिकृत यात्रा कार्यक्रम (PDF)' : 'Official Yatra Programme (PDF)'}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn small primary"
+                      onClick={() => alert(yp.pdfNotice || 'The official PDF programme will be available for download once confirmed by the trust.')}
+                    >
+                      {yp.downloadPdf || 'Download Programme (PDF)'}
+                    </button>
+                  </div>
+                  <p className="small muted" style={{ margin: 0 }}>
+                    ℹ️ {yp.pdfNotice}
+                  </p>
+                </div>
+
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--maroon)', marginBottom: '1rem' }}>
+                  {isMr ? 'दिवसनिहाय सविस्तर रूपरेषा' : 'Day-wise Detailed Sequence'}
+                </h3>
 
                 {/* Tentative Programme Timeline */}
                 <div style={{ display: 'grid', gap: '1.2rem' }}>

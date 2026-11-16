@@ -26,20 +26,29 @@ function PageLoader() {
   );
 }
 
-// Scrolls to #section links and to the top on page change.
+// Scrolls to #section links and to the top on page change, or scrolls to alias sections
 function ScrollManager() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    if (hash) {
-      const id = hash.slice(1);
-      const el = document.getElementById(id);
+    const aliasMap = {
+      '/visit': 'visit',
+      '/contact': 'contact',
+      '/about': 'about',
+      '/history': 'history',
+      '/worship': 'worship',
+      '/festivals': 'festivals',
+    };
+    const targetId = hash ? hash.slice(1) : aliasMap[pathname];
+
+    if (targetId) {
+      const el = document.getElementById(targetId);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
         return;
       }
       // Retry scroll once lazy-loaded page chunk finishes rendering
       const timer = setTimeout(() => {
-        const target = document.getElementById(id);
+        const target = document.getElementById(targetId);
         if (target) target.scrollIntoView({ behavior: 'smooth' });
       }, 350);
       return () => clearTimeout(timer);
@@ -59,6 +68,12 @@ export default function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/about" element={<Home />} />
+              <Route path="/history" element={<Home />} />
+              <Route path="/worship" element={<Home />} />
+              <Route path="/festivals" element={<Home />} />
+              <Route path="/visit" element={<Home />} />
+              <Route path="/contact" element={<Home />} />
               <Route path="/donate" element={<Donate />} />
               <Route path="/ledger" element={<Ledger />} />
               <Route path="/gallery" element={<Gallery />} />

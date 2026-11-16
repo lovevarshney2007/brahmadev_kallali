@@ -27,6 +27,12 @@ export default function Committee() {
       icon: '📜',
     },
     {
+      role: roles.jointSecretary || (isMr ? 'सहसचिव' : 'Joint Secretary / Sahasachiv'),
+      name: isMr ? 'श्री. सहसचिव' : 'Shri. Joint Secretary',
+      desc: isMr ? 'दफ्तर सहाय्य व समन्वयक' : 'Administrative assistance & records coordination',
+      icon: '✍️',
+    },
+    {
       role: roles.treasurer || (isMr ? 'कोषाध्यक्ष' : 'Treasurer / Koshadhyaksha'),
       name: isMr ? 'श्री. कोषाध्यक्ष' : 'Shri. Treasurer',
       desc: isMr ? 'दान वही, हिशोब व आर्थिक पारदर्शकता' : 'Financial management, audit & Daan Ledger oversight',
@@ -37,6 +43,12 @@ export default function Committee() {
       name: isMr ? 'श्री. यात्रा प्रमुख' : 'Shri. Yatra Coordinator',
       desc: isMr ? 'यात्रा महोत्सव नियोजन, मिरवणूक व सुरक्षा' : 'Yatra logistics, procession management & security',
       icon: '🚩',
+    },
+    {
+      role: roles.volunteerCoordinator || (isMr ? 'स्वयंसेवक प्रमुख' : 'Volunteer Coordinator'),
+      name: isMr ? 'श्री. स्वयंसेवक प्रमुख' : 'Shri. Volunteer Coordinator',
+      desc: isMr ? 'सेवेकरी समन्वय, अन्नदान व भाविक सहाय्य' : 'Sevekari mobilization, prasad seva & devotee hospitality',
+      icon: '🤝',
     },
     {
       role: roles.advisor || (isMr ? 'मार्गदर्शक सदस्य' : 'Advisory Member / Village Elder'),

@@ -3,7 +3,17 @@ import { Link } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 import { api, fmtDate } from '../api.js';
 
-const EVENT_OPTIONS = ['All', 'General', 'Brahmadev Yatra', 'Kartik Utsav', 'Hanuman Jayanti', 'Diwali', 'Guru Purnima', 'Maha Shivaratri'];
+const EVENT_OPTIONS = [
+  'All',
+  'Temple Photos',
+  'Yatra Mahotsav',
+  'Religious Ceremonies',
+  'Devotee Visits',
+  'General',
+  'Brahmadev Yatra',
+  'Kartik Utsav',
+  'Diwali',
+];
 
 /** Returns a cheap "fingerprint" to catch same-file re-uploads within a session */
 function fileFingerprint(file) {
