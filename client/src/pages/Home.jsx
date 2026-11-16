@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
 import { inr, api, fmtDate } from '../api.js';
 import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
-import HeroSlider from '../components/HeroSlider.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
 
@@ -79,14 +78,6 @@ export default function Home() {
   const currentPhoto = galleryPhotos[lightboxIndex];
   const currentVideo = galleryVideos[videoLightboxIndex];
 
-  // Prepare slider slides from approved photos only (HeroSlider handles empty state itself)
-  const slides = galleryPhotos.slice(0, 5).map((photo) => ({
-    image: photo.imageUrl,
-    alt: photo.caption || `Temple photo by ${photo.uploaderName}`,
-    title: photo.caption || 'श्री क्षेत्र ब्रह्मदेव देवस्थान',
-    caption: `🙏 ${photo.uploaderName}${photo.event !== 'General' ? ` · ${photo.event}` : ''}`,
-  }));
-
   return (
     <>
       <Toran />
@@ -107,23 +98,21 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 60px -20px rgba(91,22,16,.5)' }}>
-            <HeroSlider
-              slides={slides}
-              autoPlay={true}
-              autoPlayInterval={6000}
-              showArrows={true}
-              showDots={true}
-              pauseOnHover={true}
-            />
-            <Shrine style={{
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '2rem 0' }}>
+            <div style={{
               position: 'absolute',
-              bottom: '-30px',
-              right: '2%',
+              width: '260px',
+              height: '260px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(245,176,65,.18) 0%, rgba(230,126,34,.08) 60%, transparent 80%)',
+              filter: 'blur(8px)',
+            }} />
+            <Shrine style={{
               width: '100%',
-              maxWidth: '180px',
-              zIndex: 5,
-              filter: 'drop-shadow(0 8px 24px rgba(0,0,0,.4))'
+              maxWidth: '260px',
+              filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.35))',
+              position: 'relative',
+              zIndex: 1,
             }} />
           </div>
         </div>
