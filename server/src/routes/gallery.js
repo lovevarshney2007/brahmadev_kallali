@@ -23,7 +23,7 @@ const uploadLimiter = rateLimit({
 
 // 1. Public: List approved photos
 router.get('/public/photos', ah(async (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 30, 100);
+  const limit = Math.min(Number(req.query.limit) || 30, 200);
   const page = Math.max(Number(req.query.page) || 1, 1);
   const skip = (page - 1) * limit;
 

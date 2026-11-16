@@ -68,12 +68,12 @@ export default function Home() {
   const [enquiryError, setEnquiryError] = useState('');
 
   useEffect(() => {
-    api('/gallery/public/photos?limit=6')
+    api('/gallery/public/photos?limit=100')
       .then((data) => {
         if (data?.items) setGalleryPhotos(data.items);
       })
       .catch(() => {});
-    api('/gallery/public/videos?limit=4')
+    api('/gallery/public/videos?limit=100')
       .then((data) => {
         if (data?.items) setGalleryVideos(data.items);
       })
