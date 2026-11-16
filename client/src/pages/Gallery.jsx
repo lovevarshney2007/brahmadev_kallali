@@ -412,13 +412,16 @@ export default function Gallery() {
         <section className="sec" style={{ paddingTop: '2rem' }}>
           <div className="wrap">
             {/* Filter */}
+            {/* Filter */}
             <div className="gal-filter-bar">
               <label htmlFor="evtFilter" className="sr-only">Filter by event</label>
               <select id="evtFilter" value={selectedEvent} onChange={(e) => setSelectedEvent(e.target.value)} className="event-select">
                 {allEvents.map((evt) => <option key={evt} value={evt}>{evt}</option>)}
               </select>
               {selectedEvent !== 'All' && (
-                <button className="btn small" onClick={() => setSelectedEvent('All')}>✕ Clear filter</button>
+                <button className="btn small" onClick={() => setSelectedEvent('All')}>
+                  {isMr ? '✕ फिल्टर काढा' : '✕ Clear filter'}
+                </button>
               )}
             </div>
 
@@ -431,16 +434,29 @@ export default function Gallery() {
               <div className="gal-empty">
                 <div className="gal-empty-icon">⚠️</div>
                 <p>{photoError}</p>
-                <button className="btn small" onClick={() => fetchPhotos(photoPage)}>Try again</button>
+                <button className="btn small" onClick={() => fetchPhotos(photoPage)}>
+                  {isMr ? 'पुन्हा प्रयत्न करा' : 'Try again'}
+                </button>
               </div>
             ) : !photos?.items?.length ? (
               <div className="gal-empty">
                 <div className="gal-empty-icon">🙏</div>
-                <p>No photos yet{selectedEvent !== 'All' ? ` for "${selectedEvent}"` : ''}.</p>
-                <p className="small muted">Be the first to share a moment from your darshan!</p>
+                <p>
+                  {isMr ? 'अद्याप कोणतेही फोटो उपलब्ध नाहीत' : 'No photos yet'}
+                  {selectedEvent !== 'All' ? (isMr ? ` ("${selectedEvent}" साठी)` : ` for "${selectedEvent}"`) : ''}.
+                </p>
+                <p className="small muted">
+                  {isMr ? 'आपल्या दर्शनाचे छायाचित्र सर्वांसोबत शेअर करणारे पहिले भाविक व्हा!' : 'Be the first to share a moment from your darshan!'}
+                </p>
                 <div className="btns" style={{ justifyContent: 'center', marginTop: '.5rem' }}>
-                  {selectedEvent !== 'All' && <button className="btn small" onClick={() => setSelectedEvent('All')}>Show all</button>}
-                  <button className="btn primary small" onClick={() => setTab('upload')}>Share a Photo</button>
+                  {selectedEvent !== 'All' && (
+                    <button className="btn small" onClick={() => setSelectedEvent('All')}>
+                      {isMr ? 'सर्व दाखवा' : 'Show all'}
+                    </button>
+                  )}
+                  <button className="btn primary small" onClick={() => setTab('upload')}>
+                    {isMr ? 'फोटो शेअर करा' : 'Share a Photo'}
+                  </button>
                 </div>
               </div>
             ) : (
@@ -464,9 +480,15 @@ export default function Gallery() {
             {/* Pagination */}
             {photos?.pages > 1 && (
               <div className="pager" style={{ marginTop: '2rem' }}>
-                <button className="btn small" disabled={photoPage <= 1} onClick={() => { setPhotoPage((p) => p - 1); fetchPhotos(photoPage - 1); }}>← Prev</button>
-                <span className="small muted">Page {photoPage} of {photos.pages}</span>
-                <button className="btn small" disabled={photoPage >= photos.pages} onClick={() => { setPhotoPage((p) => p + 1); fetchPhotos(photoPage + 1); }}>Next →</button>
+                <button className="btn small" disabled={photoPage <= 1} onClick={() => { setPhotoPage((p) => p - 1); fetchPhotos(photoPage - 1); }}>
+                  {isMr ? '← मागे' : '← Prev'}
+                </button>
+                <span className="small muted">
+                  {isMr ? `पृष्ठ ${photoPage} पैकी ${photos.pages}` : `Page ${photoPage} of ${photos.pages}`}
+                </span>
+                <button className="btn small" disabled={photoPage >= photos.pages} onClick={() => { setPhotoPage((p) => p + 1); fetchPhotos(photoPage + 1); }}>
+                  {isMr ? 'पुढे →' : 'Next →'}
+                </button>
               </div>
             )}
           </div>
@@ -484,7 +506,9 @@ export default function Gallery() {
                 {allEvents.map((evt) => <option key={evt} value={evt}>{evt}</option>)}
               </select>
               {videoEvent !== 'All' && (
-                <button className="btn small" onClick={() => setVideoEvent('All')}>✕ Clear filter</button>
+                <button className="btn small" onClick={() => setVideoEvent('All')}>
+                  {isMr ? '✕ फिल्टर काढा' : '✕ Clear filter'}
+                </button>
               )}
             </div>
 
@@ -496,16 +520,29 @@ export default function Gallery() {
               <div className="gal-empty">
                 <div className="gal-empty-icon">⚠️</div>
                 <p>{videoError}</p>
-                <button className="btn small" onClick={() => fetchVideos(videoPage)}>Try again</button>
+                <button className="btn small" onClick={() => fetchVideos(videoPage)}>
+                  {isMr ? 'पुन्हा प्रयत्न करा' : 'Try again'}
+                </button>
               </div>
             ) : !videos?.items?.length ? (
               <div className="gal-empty">
                 <div className="gal-empty-icon">🎬</div>
-                <p>No videos yet{videoEvent !== 'All' ? ` for "${videoEvent}"` : ''}.</p>
-                <p className="small muted">Be the first to share a video from your darshan!</p>
+                <p>
+                  {isMr ? 'अद्याप कोणतेही व्हिडिओ उपलब्ध नाहीत' : 'No videos yet'}
+                  {videoEvent !== 'All' ? (isMr ? ` ("${videoEvent}" साठी)` : ` for "${videoEvent}"`) : ''}.
+                </p>
+                <p className="small muted">
+                  {isMr ? 'आपल्या दर्शनाचा व्हिडिओ सर्वांसोबत शेअर करणारे पहिले भाविक व्हा!' : 'Be the first to share a video from your darshan!'}
+                </p>
                 <div className="btns" style={{ justifyContent: 'center', marginTop: '.5rem' }}>
-                  {videoEvent !== 'All' && <button className="btn small" onClick={() => setVideoEvent('All')}>Show all</button>}
-                  <button className="btn primary small" onClick={() => { setTab('upload'); setUploadType('video'); }}>Share a Video</button>
+                  {videoEvent !== 'All' && (
+                    <button className="btn small" onClick={() => setVideoEvent('All')}>
+                      {isMr ? 'सर्व दाखवा' : 'Show all'}
+                    </button>
+                  )}
+                  <button className="btn primary small" onClick={() => { setTab('upload'); setUploadType('video'); }}>
+                    {isMr ? 'व्हिडिओ शेअर करा' : 'Share a Video'}
+                  </button>
                 </div>
               </div>
             ) : (
@@ -540,9 +577,15 @@ export default function Gallery() {
             {/* Pagination */}
             {videos?.pages > 1 && (
               <div className="pager" style={{ marginTop: '2rem' }}>
-                <button className="btn small" disabled={videoPage <= 1} onClick={() => { setVideoPage((p) => p - 1); fetchVideos(videoPage - 1); }}>← Prev</button>
-                <span className="small muted">Page {videoPage} of {videos.pages}</span>
-                <button className="btn small" disabled={videoPage >= videos.pages} onClick={() => { setVideoPage((p) => p + 1); fetchVideos(videoPage + 1); }}>Next →</button>
+                <button className="btn small" disabled={videoPage <= 1} onClick={() => { setVideoPage((p) => p - 1); fetchVideos(videoPage - 1); }}>
+                  {isMr ? '← मागे' : '← Prev'}
+                </button>
+                <span className="small muted">
+                  {isMr ? `पृष्ठ ${videoPage} पैकी ${videos.pages}` : `Page ${videoPage} of ${videos.pages}`}
+                </span>
+                <button className="btn small" disabled={videoPage >= videos.pages} onClick={() => { setVideoPage((p) => p + 1); fetchVideos(videoPage + 1); }}>
+                  {isMr ? 'पुढे →' : 'Next →'}
+                </button>
               </div>
             )}
           </div>
