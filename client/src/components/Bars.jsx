@@ -3,7 +3,8 @@ import { inr } from '../api.js';
 // Horizontal bars, all drawn to the same scale (the largest value fills the track).
 export default function Bars({ rows, total }) {
   if (!rows?.length) return <p className="muted small">Nothing recorded yet.</p>;
-  const max = Math.max(...rows.map((r) => r.amount));
+  const maxVal = Math.max(...rows.map((r) => r.amount));
+  const max = maxVal > 0 ? maxVal : 1;
   return (
     <div className="bars">
       {rows.map((r) => (

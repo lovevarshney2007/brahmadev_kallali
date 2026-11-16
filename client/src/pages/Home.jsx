@@ -9,7 +9,7 @@ import TravelCard from '../components/TravelCard.jsx';
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Mukhed%2C%20Nanded%2C%20Maharashtra';
 
 export default function Home() {
-  const { settings, summary, t } = useSite();
+  const { settings, summary, lang, t } = useSite();
   const timings = settings?.darshanTimings || [];
   const festivals = settings?.festivals || [];
   const c = {
@@ -82,7 +82,7 @@ export default function Home() {
     <>
       <Toran />
       <section className="hero" id="home">
-        <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1.3fr .7fr', gap: '2rem', alignItems: 'center', paddingBlock: '3rem 3.5rem' }}>
+        <div className="wrap">
           <div className="hero-text" style={{ display: 'grid', gap: '1.1rem', minWidth: 0 }}>
             <div className="mr-name" lang="mr">{t.hero.deity}</div>
             <h1>{t.hero.title}</h1>
@@ -248,7 +248,7 @@ export default function Home() {
             initialMonth={new Date().getMonth()}
             showMonthNav={true}
             t={t.festivals}
-            lang={settings?.lang || 'en'}
+            lang={lang}
           />
         </div>
       </section>
@@ -394,7 +394,7 @@ export default function Home() {
             <div style={{ display: 'grid', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
                 <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                  <span>🖼️</span> {settings?.lang === 'mr' ? 'सर्व छायाचित्रे' : 'Photo Gallery'}
+                  <span>🖼️</span> {lang === 'mr' ? 'सर्व छायाचित्रे' : 'Photo Gallery'}
                   <span className="gal-count">{galleryPhotos.length}</span>
                 </h3>
                 <Link to="/gallery" className="btn small">{t.gallery.viewAll}</Link>
@@ -443,7 +443,7 @@ export default function Home() {
             <div style={{ display: 'grid', gap: '1rem', marginTop: activeMediaTab === 'all' ? '1.5rem' : '0' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderBottom: '1px solid var(--line)', paddingBottom: '.5rem', flexWrap: 'wrap' }}>
                 <h3 style={{ color: 'var(--heading)', display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                  <span>🎬</span> {settings?.lang === 'mr' ? 'व्हिडिओ दर्शन' : 'Video Gallery'}
+                  <span>🎬</span> {lang === 'mr' ? 'व्हिडिओ दर्शन' : 'Video Gallery'}
                   <span className="gal-count">{galleryVideos.length}</span>
                 </h3>
                 <Link to="/gallery?tab=videos" className="btn small">View all videos</Link>

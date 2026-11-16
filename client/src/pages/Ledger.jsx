@@ -11,6 +11,7 @@ export default function Ledger() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [visitPhotos, setVisitPhotos] = useState([]);
 
   const isMr = lang === 'mr';
 
@@ -18,6 +19,12 @@ export default function Ledger() {
     setData(null); setError('');
     api(`/public/${tab}?page=${page}&limit=25`).then(setData).catch((e) => setError(e.message));
   }, [tab, page]);
+
+  useEffect(() => {
+    api('/gallery/public/photos?limit=8').then((res) => {
+      if (res?.items) setVisitPhotos(res.items);
+    }).catch(() => {});
+  }, []);
 
   const switchTab = (tTab) => { setTab(tTab); setPage(1); };
   const hasExamples = data?.items?.some((x) => x.example);
@@ -160,6 +167,7 @@ export default function Ledger() {
           <div className="wrap">
             <SectionHead eyebrow={isMr ? "दर्शन व भेट" : "Visits & Darshan"} title={isMr ? "माननीयांची भेटी व विशेष क्षण" : "Distinguished Visits & Special Moments"} />
             <PhotoGrid
+              photos={visitPhotos}
               title={isMr ? "भेटी दालन" : "Visits Gallery"}
               subtitle={isMr ? "माननीय महानुभावांकडून केलेल्या भेटीची झलक" : "Glimpses of visits by distinguished guests"}
               emptyMessage={isMr ? "अद्याप कोणतीही भेटीचे छायाचित्र उपलब्ध नाहीत." : "No visit photos available yet."}

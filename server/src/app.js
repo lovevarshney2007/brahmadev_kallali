@@ -40,6 +40,7 @@ export function createApp() {
     env.clientUrl,                                       // CLIENT_URL env var
     'http://localhost:5173',                             // local dev
     /\.vercel\.app$/,                                    // any vercel preview
+    /shribrahmadev.*\.org$/,                             // official domain & variants
   ].filter(Boolean);
   app.use(cors({
     origin: (origin, cb) => {

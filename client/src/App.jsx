@@ -28,8 +28,18 @@ function ScrollManager() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
     if (hash) {
-      const el = document.getElementById(hash.slice(1));
-      if (el) { el.scrollIntoView(); return; }
+      const id = hash.slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      // Retry scroll once lazy-loaded page chunk finishes rendering
+      const timer = setTimeout(() => {
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      }, 350);
+      return () => clearTimeout(timer);
     }
     window.scrollTo(0, 0);
   }, [pathname, hash]);
