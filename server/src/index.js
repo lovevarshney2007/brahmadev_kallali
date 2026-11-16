@@ -13,4 +13,16 @@ if (!process.env.VERCEL) {
   });
 }
 
+// Process-level crash handlers to prevent silent failures and unhandled promise crashes
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  if (!process.env.VERCEL) {
+    process.exit(1);
+  }
+});
+
 export default app;

@@ -90,7 +90,7 @@ router.patch('/expenses/:id/void', ah(async (req, res) => {
 
 // ---- Photo Moderation ----
 router.get('/photos', ah(async (req, res) => {
-  const statusFilter = req.query.status;
+  const statusFilter = typeof req.query.status === 'string' ? req.query.status.trim() : '';
   const filter = {};
   if (statusFilter === 'pending') filter.approved = false;
   if (statusFilter === 'approved') filter.approved = true;
@@ -126,7 +126,12 @@ router.delete('/photos/:id', ah(async (req, res) => {
 router.get('/enquiries', ah(async (req, res) => {
   const { limit, page, skip } = pageParams(req.query, 100);
   const filter = {};
-  if (req.query.status) filter.status = req.query.status;
+  if (typeof req.query.status === 'string') {
+    const status = req.query.status.trim();
+    if (['pending', 'responded', 'archived'].includes(status)) {
+      filter.status = status;
+    }
+  }
   const [items, total] = await Promise.all([
     Enquiry.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
     Enquiry.countDocuments(filter),

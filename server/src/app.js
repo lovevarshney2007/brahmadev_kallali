@@ -35,21 +35,28 @@ export function createApp() {
       },
     },
   }));
-  // Allow frontend origin in production (set CLIENT_URL env var in Vercel backend project)
+  // Strictly anchored allowlist for frontend origins:
+  // - env.clientUrl and env.clientOrigins (configured per environment)
+  // - Local development (http://localhost:5173)
+  // - Official production domain (https://shribrahmadevadevasthan.org)
+  // - Project-specific Vercel preview deployments (^https://brahmadev-kallali(?:-[a-z0-9-]+)?\.vercel\.app$)
   const allowedOrigins = [
-    env.clientUrl,                                       // CLIENT_URL env var
-    'http://localhost:5173',                             // local dev
-    /\.vercel\.app$/,                                    // any vercel preview
-    /shribrahmadev.*\.org$/,                             // official domain & variants
+    env.clientUrl,
+    'http://localhost:5173',
+    'https://shribrahmadevadevasthan.org',
+    'https://www.shribrahmadevadevasthan.org',
+    /^https:\/\/brahmadev-kallali(?:-[a-z0-9-]+)?\.vercel\.app$/,
+    ...env.clientOrigins,
   ].filter(Boolean);
+
   app.use(cors({
     origin: (origin, cb) => {
-      // Allow requests with no origin (mobile, curl, Postman)
+      // Allow requests with no origin (mobile apps, server-to-server, curl)
       if (!origin) return cb(null, true);
       const ok = allowedOrigins.some((o) =>
         typeof o === 'string' ? o === origin : o.test(origin)
       );
-      cb(ok ? null : new Error('Not allowed by CORS'), ok);
+      cb(null, ok);
     },
     credentials: true,
   }));
@@ -92,12 +99,43 @@ export function createApp() {
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {
-    if (err.name === 'ValidationError' && err.errors) {
-      return res.status(400).json({ error: Object.values(err.errors)[0].message });
+    // 1. Mongoose CastError (invalid ObjectId or format)
+    if (err.name === 'CastError') {
+      return res.status(400).json({ error: 'Invalid ID format.' });
     }
-    const status = err.status || err.statusCode || 500;
-    if (status >= 500) console.error(err);
-    res.status(status).json({ error: status >= 500 ? 'Something went wrong on the server. Please try again.' : err.message });
+
+    // 2. Mongoose ValidationError
+    if (err.name === 'ValidationError') {
+      const msg = err.errors ? Object.values(err.errors)[0]?.message : err.message;
+      return res.status(400).json({ error: msg || 'Validation failed.' });
+    }
+
+    // 3. Multer errors (e.g. LIMIT_FILE_SIZE)
+    if (err.name === 'MulterError' || err.code === 'LIMIT_FILE_SIZE') {
+      const msg = err.code === 'LIMIT_FILE_SIZE'
+        ? 'File size exceeds allowable limit.'
+        : err.message || 'File upload error.';
+      return res.status(400).json({ error: msg });
+    }
+
+    // 4. Multer file-filter errors
+    if (err.message && (err.message.includes('files are allowed') || err.message.includes('image files') || err.message.includes('video files'))) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // 5. Catch-all: only 5xx errors get logged and return the generic message
+    const status = (typeof err.status === 'number' && err.status >= 400 && err.status < 600)
+      ? err.status
+      : (typeof err.statusCode === 'number' && err.statusCode >= 400 && err.statusCode < 600)
+        ? err.statusCode
+        : 500;
+
+    if (status >= 500) {
+      console.error(err);
+      return res.status(status).json({ error: 'Something went wrong on the server. Please try again.' });
+    }
+
+    return res.status(status).json({ error: err.message || 'Bad request.' });
   });
 
   return app;

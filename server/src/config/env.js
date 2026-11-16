@@ -14,6 +14,10 @@ export const env = {
   mongoUri: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  clientOrigins: (process.env.CLIENT_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
   razorpay: {
     keyId: process.env.RAZORPAY_KEY_ID || '',
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',

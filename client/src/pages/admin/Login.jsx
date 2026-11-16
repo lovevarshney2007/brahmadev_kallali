@@ -36,7 +36,7 @@ export default function AdminLogin() {
             </p>
           </div>
 
-          <label className="field">
+          <label className="field" htmlFor="email">
             Email
             <input
               type="email"
@@ -49,7 +49,7 @@ export default function AdminLogin() {
             />
           </label>
 
-          <label className="field">
+          <label className="field" htmlFor="password">
             Password
             <input
               type="password"

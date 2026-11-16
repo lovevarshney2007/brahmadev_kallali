@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Photo } from '../models/Photo.js';
@@ -7,6 +8,7 @@ import {
   uploadBuffer,
   deleteFromCloudinary,
   computeHash,
+  getUploadSignature,
 } from '../middleware/upload.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { photoUploadInput } from '../utils/validate.js';
@@ -21,6 +23,27 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const likeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: { error: 'Too many likes from this network. Please slow down.' },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
+// 0. Public: Signed upload parameters for Cloudinary direct upload (bypasses Vercel 4.5 MB limit)
+router.get('/upload-signature', uploadLimiter, (req, res) => {
+  const folder = typeof req.query.folder === 'string' && req.query.folder.trim()
+    ? req.query.folder.trim()
+    : 'brahmadev_videos';
+
+  const sigData = getUploadSignature(folder);
+  if (!sigData) {
+    return res.json({ directUpload: false });
+  }
+  res.json(sigData);
+});
+
 // 1. Public: List approved photos
 router.get('/public/photos', ah(async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 30, 200);
@@ -28,8 +51,11 @@ router.get('/public/photos', ah(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const filter = { approved: true };
-  if (req.query.event && req.query.event !== 'All') {
-    filter.event = req.query.event;
+  if (typeof req.query.event === 'string') {
+    const event = req.query.event.trim();
+    if (event && event !== 'All') {
+      filter.event = event;
+    }
   }
 
   const [items, total] = await Promise.all([
@@ -103,7 +129,8 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
 }));
 
 // 3. Public: Like a photo
-router.post('/public/photos/:id/like', ah(async (req, res) => {
+router.post('/public/photos/:id/like', likeLimiter, ah(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Photo not found.' });
   const photo = await Photo.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true });
   if (!photo) return res.status(404).json({ error: 'Photo not found.' });
   res.json({ likes: photo.likes });
@@ -113,7 +140,7 @@ router.post('/public/photos/:id/like', ah(async (req, res) => {
 
 // 4. Admin: Get all photos (pending & approved)
 router.get(['/admin/photos', '/photos'], requireAdmin, ah(async (req, res) => {
-  const statusFilter = req.query.status; // 'pending', 'approved', or all
+  const statusFilter = typeof req.query.status === 'string' ? req.query.status.trim() : '';
   const filter = {};
   if (statusFilter === 'pending') filter.approved = false;
   if (statusFilter === 'approved') filter.approved = true;

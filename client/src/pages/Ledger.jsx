@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 import { api, inr, fmtDate } from '../api.js';
 import { SectionHead } from '../components/Decor.jsx';
@@ -316,9 +317,9 @@ export default function Ledger() {
                 {t.ledgerPage.annualReportsDesc}
               </p>
             </div>
-            <a href="/donate" className="btn small primary">
+            <Link to="/donate" className="btn small primary">
               {t.nav.donate}
-            </a>
+            </Link>
           </div>
           <div className="tablebox">
             <table>
