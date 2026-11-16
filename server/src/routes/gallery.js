@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Photo } from '../models/Photo.js';
@@ -17,6 +18,14 @@ const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 15,
   message: { error: 'Too many uploads from this network. Please try again in 15 minutes.' },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
+const likeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: { error: 'Too many likes from this network. Please slow down.' },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
@@ -106,7 +115,8 @@ router.post('/public/photos/upload', uploadLimiter, uploadMiddleware.single('pho
 }));
 
 // 3. Public: Like a photo
-router.post('/public/photos/:id/like', ah(async (req, res) => {
+router.post('/public/photos/:id/like', likeLimiter, ah(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Photo not found.' });
   const photo = await Photo.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true });
   if (!photo) return res.status(404).json({ error: 'Photo not found.' });
   res.json({ likes: photo.likes });

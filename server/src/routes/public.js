@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Donation } from '../models/Donation.js';
 import { Expense } from '../models/Expense.js';
@@ -9,6 +10,14 @@ import { Enquiry } from '../models/Enquiry.js';
 import { enquiryInput } from '../utils/validate.js';
 
 const router = Router();
+
+const enquiryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many enquiry submissions from this network. Please try again after 15 minutes.' },
+});
 
 router.get('/settings', ah(async (_req, res) => {
   const s = await getSettings();
@@ -46,7 +55,7 @@ function listRoute(Model) {
 router.get('/donations', listRoute(Donation));
 router.get('/expenses', listRoute(Expense));
 
-router.post('/enquiry', ah(async (req, res) => {
+router.post('/enquiry', enquiryLimiter, ah(async (req, res) => {
   const data = enquiryInput(req.body);
   const enquiry = await Enquiry.create(data);
   res.status(201).json({ ok: true, message: 'Enquiry received. The temple office will get in touch.', id: enquiry._id });

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
 import { Video } from '../models/Video.js';
@@ -17,6 +18,14 @@ const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10, // Fewer video uploads per window (larger files)
   message: { error: 'Too many uploads from this network. Please try again in 15 minutes.' },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
+const likeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: { error: 'Too many likes from this network. Please slow down.' },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
@@ -113,7 +122,8 @@ router.post(
 );
 
 // 3. Public: Like a video
-router.post('/public/videos/:id/like', ah(async (req, res) => {
+router.post('/public/videos/:id/like', likeLimiter, ah(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Video not found.' });
   const video = await Video.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true });
   if (!video) return res.status(404).json({ error: 'Video not found.' });
   res.json({ likes: video.likes });
