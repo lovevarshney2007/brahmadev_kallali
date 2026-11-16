@@ -43,6 +43,7 @@ function Donations({ purposes = [], onChange }) {
   const [list, setList] = useState(null);
   const [showVoided, setShowVoided] = useState(false);
   const [status, setStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 
   const load = useCallback(() => api(`/admin/donations?limit=100&showVoided=${showVoided}`).then(setList).catch((e) => setStatus({ kind: 'error', text: e.message })), [showVoided]);
@@ -50,6 +51,8 @@ function Donations({ purposes = [], onChange }) {
 
   async function submit(e) {
     e.preventDefault();
+    if (busy) return;
+    setBusy(true);
     try {
       const d = await api('/admin/donations', { method: 'POST', body: f });
       const msg = `Recorded ${inr(d.amount)} — receipt no. ${d.receiptNo}.`;
@@ -58,6 +61,8 @@ function Donations({ purposes = [], onChange }) {
       load(); onChange();
     } catch (err) {
       setStatus({ kind: 'error', text: err.message });
+    } finally {
+      setBusy(false);
     }
   }
   async function voidIt(id, reason) {
@@ -83,7 +88,7 @@ function Donations({ purposes = [], onChange }) {
         <label>UPI / bank reference<input id="dRef" value={f.ref} onChange={set('ref')} placeholder="Only last 4 are shown" /></label>
         <label>Private note<input id="dNote" value={f.note} onChange={set('note')} /></label>
         <label className="check wide"><input type="checkbox" id="dShow" checked={f.showName} onChange={set('showName')} /> Donor agreed to show their name publicly</label>
-        <div className="btns wide"><button className="btn primary" type="submit">Add daan and issue receipt</button></div>
+        <div className="btns wide"><button className="btn primary" type="submit" disabled={busy}>{busy ? 'Recording…' : 'Add daan and issue receipt'}</button></div>
       </form>
       <Status s={status} />
       <div className="panel">
@@ -121,6 +126,7 @@ function Expenses({ purposes = [], onChange }) {
   const [list, setList] = useState(null);
   const [showVoided, setShowVoided] = useState(false);
   const [status, setStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const load = useCallback(() => api(`/admin/expenses?limit=100&showVoided=${showVoided}`).then(setList).catch((e) => setStatus({ kind: 'error', text: e.message })), [showVoided]);
@@ -128,11 +134,17 @@ function Expenses({ purposes = [], onChange }) {
 
   async function submit(e) {
     e.preventDefault();
+    if (busy) return;
+    setBusy(true);
     try {
       const x = await api('/admin/expenses', { method: 'POST', body: f });
       setStatus({ kind: 'ok', text: `Recorded expense of ${inr(x.amount)}.` });
       setF({ ...blank, date: f.date }); load(); onChange();
-    } catch (err) { setStatus({ kind: 'error', text: err.message }); }
+    } catch (err) {
+      setStatus({ kind: 'error', text: err.message });
+    } finally {
+      setBusy(false);
+    }
   }
   async function voidIt(id, reason) {
     try { await api(`/admin/expenses/${id}/void`, { method: 'PATCH', body: { reason } }); load(); onChange(); }
@@ -149,7 +161,7 @@ function Expenses({ purposes = [], onChange }) {
         <label>Purpose<select id="ePurpose" value={f.purpose} onChange={set('purpose')}>{purposes.filter((p) => p !== 'General daan').map((p) => <option key={p}>{p}</option>)}</select></label>
         <label>Paid to<input id="ePaidTo" value={f.paidTo} onChange={set('paidTo')} placeholder="Shop or person" /></label>
         <label>Bill / voucher no.<input id="eBill" value={f.billNo} onChange={set('billNo')} /></label>
-        <div className="btns wide"><button className="btn primary" type="submit">Add expense</button></div>
+        <div className="btns wide"><button className="btn primary" type="submit" disabled={busy}>{busy ? 'Recording…' : 'Add expense'}</button></div>
       </form>
       <Status s={status} />
       <div className="panel">
