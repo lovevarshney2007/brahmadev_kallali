@@ -20,16 +20,26 @@ export async function connectDB(uri = env.mongoUri) {
       const email = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@brahmadev.org').toLowerCase();
       const existing = await Admin.findOne({ email });
       if (!existing) {
-        const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Brahmadev@2026';
-        const passwordHash = await Admin.hashPassword(defaultPassword);
-        await Admin.create({
-          name: 'Temple Trustee',
-          email,
-          passwordHash,
-        });
-        console.log(`Admin account initialized: ${email}`);
+        const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+        if (!defaultPassword) {
+          if (env.isProd) {
+            throw new Error('ADMIN_DEFAULT_PASSWORD environment variable is required to initialize the admin account in production.');
+          }
+          console.warn('ADMIN_DEFAULT_PASSWORD is not set; skipping admin account initialization.');
+        } else {
+          const passwordHash = await Admin.hashPassword(defaultPassword);
+          await Admin.create({
+            name: 'Temple Trustee',
+            email,
+            passwordHash,
+          });
+          console.log(`Admin account initialized: ${email}`);
+        }
       }
     } catch (err) {
+      if (env.isProd && err.message?.includes('ADMIN_DEFAULT_PASSWORD')) {
+        throw err;
+      }
       console.error('Admin initialization error:', err.message);
     }
 
