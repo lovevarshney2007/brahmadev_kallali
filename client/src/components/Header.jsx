@@ -15,16 +15,33 @@ export function Logo({ size = 34 }) {
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const [openAbout, setOpenAbout] = useState(false);
-  const [openYatra, setOpenYatra] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null); // null | 'about' | 'yatra'
   const { settings, lang, setLang, t } = useSite();
   const location = useLocation();
   const navRef = useRef(null);
+  const timerRef = useRef(null);
 
   const close = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setOpen(false);
-    setOpenAbout(false);
-    setOpenYatra(false);
+    setActiveDropdown(null);
+  };
+
+  const handleMouseEnter = (name) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setActiveDropdown(name);
+  };
+
+  const handleMouseLeave = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 180);
+  };
+
+  const toggleDropdown = (name) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setActiveDropdown((prev) => (prev === name ? null : name));
   };
 
   // Close menus when route changes
@@ -32,15 +49,26 @@ export default function Header() {
     close();
   }, [location.pathname, location.hash, location.search]);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Close mobile navigation on Escape key
   useEffect(() => {
-    if (!open) return;
+    if (!open && !activeDropdown) return;
     function onKeyDown(e) {
       if (e.key === 'Escape') close();
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+  }, [open, activeDropdown]);
 
   // Lock background scroll when mobile menu is open
   useEffect(() => {
@@ -53,6 +81,9 @@ export default function Header() {
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  const isAboutOpen = activeDropdown === 'about';
+  const isYatraOpen = activeDropdown === 'yatra';
 
   return (
     <>
@@ -84,21 +115,21 @@ export default function Header() {
 
               {/* About Us Dropdown */}
               <li
-                className={`nav-item-dropdown${openAbout ? ' expanded' : ''}`}
-                onMouseEnter={() => setOpenAbout(true)}
-                onMouseLeave={() => setOpenAbout(false)}
+                className={`nav-item-dropdown${isAboutOpen ? ' expanded' : ''}`}
+                onMouseEnter={() => handleMouseEnter('about')}
+                onMouseLeave={handleMouseLeave}
               >
                 <button
                   type="button"
                   className="nav-dropdown-trigger"
-                  aria-expanded={openAbout}
+                  aria-expanded={isAboutOpen}
                   aria-haspopup="true"
-                  onClick={() => setOpenAbout((prev) => !prev)}
+                  onClick={() => toggleDropdown('about')}
                 >
                   {t.nav.aboutUs}
                   <span className="dropdown-caret" aria-hidden="true">▾</span>
                 </button>
-                <ul className={`nav-dropdown-menu${openAbout ? ' open' : ''}`}>
+                <ul className={`nav-dropdown-menu${isAboutOpen ? ' open' : ''}`}>
                   <li>
                     <Link to="/#about" onClick={close}>
                       {t.nav.aboutTemple}
@@ -119,21 +150,21 @@ export default function Header() {
 
               {/* Yatra Mahotsav Dropdown */}
               <li
-                className={`nav-item-dropdown${openYatra ? ' expanded' : ''}`}
-                onMouseEnter={() => setOpenYatra(true)}
-                onMouseLeave={() => setOpenYatra(false)}
+                className={`nav-item-dropdown${isYatraOpen ? ' expanded' : ''}`}
+                onMouseEnter={() => handleMouseEnter('yatra')}
+                onMouseLeave={handleMouseLeave}
               >
                 <button
                   type="button"
                   className="nav-dropdown-trigger"
-                  aria-expanded={openYatra}
+                  aria-expanded={isYatraOpen}
                   aria-haspopup="true"
-                  onClick={() => setOpenYatra((prev) => !prev)}
+                  onClick={() => toggleDropdown('yatra')}
                 >
                   {t.nav.yatraMahotsav}
                   <span className="dropdown-caret" aria-hidden="true">▾</span>
                 </button>
-                <ul className={`nav-dropdown-menu${openYatra ? ' open' : ''}`}>
+                <ul className={`nav-dropdown-menu${isYatraOpen ? ' open' : ''}`}>
                   <li>
                     <NavLink to="/yatra" end onClick={close}>
                       {t.nav.yatraOverview}
