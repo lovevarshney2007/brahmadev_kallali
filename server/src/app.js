@@ -35,21 +35,28 @@ export function createApp() {
       },
     },
   }));
-  // Allow frontend origin in production (set CLIENT_URL env var in Vercel backend project)
+  // Strictly anchored allowlist for frontend origins:
+  // - env.clientUrl and env.clientOrigins (configured per environment)
+  // - Local development (http://localhost:5173)
+  // - Official production domain (https://shribrahmadevadevasthan.org)
+  // - Project-specific Vercel preview deployments (^https://brahmadev-kallali(?:-[a-z0-9-]+)?\.vercel\.app$)
   const allowedOrigins = [
-    env.clientUrl,                                       // CLIENT_URL env var
-    'http://localhost:5173',                             // local dev
-    /\.vercel\.app$/,                                    // any vercel preview
-    /shribrahmadev.*\.org$/,                             // official domain & variants
+    env.clientUrl,
+    'http://localhost:5173',
+    'https://shribrahmadevadevasthan.org',
+    'https://www.shribrahmadevadevasthan.org',
+    /^https:\/\/brahmadev-kallali(?:-[a-z0-9-]+)?\.vercel\.app$/,
+    ...env.clientOrigins,
   ].filter(Boolean);
+
   app.use(cors({
     origin: (origin, cb) => {
-      // Allow requests with no origin (mobile, curl, Postman)
+      // Allow requests with no origin (mobile apps, server-to-server, curl)
       if (!origin) return cb(null, true);
       const ok = allowedOrigins.some((o) =>
         typeof o === 'string' ? o === origin : o.test(origin)
       );
-      cb(ok ? null : new Error('Not allowed by CORS'), ok);
+      cb(null, ok);
     },
     credentials: true,
   }));
