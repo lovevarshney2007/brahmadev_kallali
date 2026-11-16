@@ -8,6 +8,7 @@ import {
   uploadBuffer,
   deleteFromCloudinary,
   computeHash,
+  getUploadSignature,
 } from '../middleware/upload.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { photoUploadInput } from '../utils/validate.js';
@@ -28,6 +29,19 @@ const likeLimiter = rateLimit({
   message: { error: 'Too many likes from this network. Please slow down.' },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+});
+
+// 0. Public: Signed upload parameters for Cloudinary direct upload (bypasses Vercel 4.5 MB limit)
+router.get('/upload-signature', uploadLimiter, (req, res) => {
+  const folder = typeof req.query.folder === 'string' && req.query.folder.trim()
+    ? req.query.folder.trim()
+    : 'brahmadev_videos';
+
+  const sigData = getUploadSignature(folder);
+  if (!sigData) {
+    return res.json({ directUpload: false });
+  }
+  res.json(sigData);
 });
 
 // 1. Public: List approved photos

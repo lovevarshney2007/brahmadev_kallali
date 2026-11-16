@@ -63,7 +63,7 @@ export async function uploadBuffer(buffer, mimetype) {
   });
 }
 
-// --- VIDEO UPLOAD (100 MB max) ---
+// --- VIDEO UPLOAD (4 MB max fallback for direct server uploads) ---
 
 export const uploadVideoMiddleware = multer({
   storage: multer.memoryStorage(),
@@ -78,8 +78,30 @@ export const uploadVideoMiddleware = multer({
       cb(new Error('Only MP4, MOV, WebM, AVI, MPEG and 3GP video files are allowed.'));
     }
   },
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB (safe under Vercel's 4.5 MB serverless payload limit)
 });
+
+/**
+ * Generate signed parameters for Cloudinary direct client uploads.
+ * Bypasses Vercel's 4.5 MB request payload limit entirely.
+ * @param {string} folder - target folder (defaults to 'brahmadev_videos')
+ */
+export function getUploadSignature(folder = 'brahmadev_videos') {
+  if (!cloudinaryEnabled) return null;
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    env.cloudinary.apiSecret
+  );
+  return {
+    directUpload: true,
+    signature,
+    timestamp,
+    apiKey: env.cloudinary.apiKey,
+    cloudName: env.cloudinary.cloudName,
+    folder,
+  };
+}
 
 /**
  * Upload a video buffer to Cloudinary.

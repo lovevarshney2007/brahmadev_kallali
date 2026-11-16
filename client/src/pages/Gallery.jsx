@@ -234,20 +234,70 @@ export default function Gallery() {
 
     setBusy(true);
     try {
-      const formData = new FormData();
-      formData.append(uploadType === 'photo' ? 'photo' : 'video', file);
-      formData.append('caption', form.caption);
-      formData.append('uploaderName', form.uploaderName);
-      formData.append('uploaderPhone', form.uploaderPhone);
-      formData.append('event', form.event);
-      formData.append('idempotencyKey', idempotencyKey);
+      let res;
 
-      const endpoint = uploadType === 'photo'
-        ? '/gallery/public/photos/upload'
-        : '/gallery/public/videos/upload';
+      // ── DIRECT CLOUDINARY UPLOAD FLOW FOR VIDEOS (Bypasses Vercel 4.5 MB limit) ──
+      if (uploadType === 'video') {
+        let sigData = null;
+        try {
+          sigData = await api('/gallery/upload-signature?folder=brahmadev_videos');
+        } catch {
+          // If signature endpoint fails, sigData remains null and we fallback
+        }
 
-      // Increase timeout for large uploads (Cloudinary can take time)
-      const res = await api(endpoint, { method: 'POST', body: formData, timeout: 180000 });
+        if (sigData && sigData.directUpload && sigData.signature) {
+          const cldFormData = new FormData();
+          cldFormData.append('file', file);
+          cldFormData.append('api_key', sigData.apiKey);
+          cldFormData.append('timestamp', String(sigData.timestamp));
+          cldFormData.append('signature', sigData.signature);
+          cldFormData.append('folder', sigData.folder);
+
+          const cldRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`,
+            { method: 'POST', body: cldFormData }
+          );
+
+          if (!cldRes.ok) {
+            const cldErr = await cldRes.json().catch(() => ({}));
+            throw new Error(cldErr?.error?.message || 'Failed to upload video to cloud storage.');
+          }
+
+          const cldResult = await cldRes.json();
+
+          // Send lightweight JSON payload with Cloudinary video URL to backend
+          res = await api('/gallery/public/videos/upload', {
+            method: 'POST',
+            body: {
+              videoUrl: cldResult.secure_url,
+              publicId: cldResult.public_id,
+              caption: form.caption,
+              uploaderName: form.uploaderName,
+              uploaderPhone: form.uploaderPhone,
+              event: form.event,
+              idempotencyKey,
+            },
+            timeout: 30000,
+          });
+        }
+      }
+
+      // If res was not set (e.g. photo upload, or dev fallback without Cloudinary signature)
+      if (!res) {
+        const formData = new FormData();
+        formData.append(uploadType === 'photo' ? 'photo' : 'video', file);
+        formData.append('caption', form.caption);
+        formData.append('uploaderName', form.uploaderName);
+        formData.append('uploaderPhone', form.uploaderPhone);
+        formData.append('event', form.event);
+        formData.append('idempotencyKey', idempotencyKey);
+
+        const endpoint = uploadType === 'photo'
+          ? '/gallery/public/photos/upload'
+          : '/gallery/public/videos/upload';
+
+        res = await api(endpoint, { method: 'POST', body: formData, timeout: 180000 });
+      }
 
       // Remember this file so user can't re-submit the same one
       submittedFingerprints.current.add(fp);

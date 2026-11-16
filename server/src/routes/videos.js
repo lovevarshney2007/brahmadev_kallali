@@ -57,47 +57,79 @@ router.get('/public/videos', ah(async (req, res) => {
   });
 }));
 
-// 2. Public: Upload video (with duplicate detection + idempotency)
+// 2. Public: Upload video (supports direct Cloudinary upload JSON and 4 MB fallback)
 router.post(
   '/public/videos/upload',
   uploadLimiter,
-  uploadVideoMiddleware.single('video'),
-  ah(async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Please select a video file to upload.' });
+  (req, res, next) => {
+    // If request has JSON body or already parsed body with videoUrl, skip multer
+    if (req.is('json') || req.body?.videoUrl) {
+      return next();
     }
-
+    uploadVideoMiddleware.single('video')(req, res, next);
+  },
+  ah(async (req, res) => {
     // Validate form body
     const input = videoUploadInput(req.body);
-
-    // --- Idempotency Key Support ---
-    // Client can send an idempotency key to safely retry failed requests
     const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
-
-    // --- Duplicate detection: reject if another video with same SHA-256 hash exists ---
-    const fileHash = computeHash(req.file.buffer);
-    const existing = await Video.findOne({ fileHash });
-    if (existing) {
-      // Return existing video data so client can show success instead of error
-      return res.status(409).json({
-        error: 'This video has already been uploaded. Please choose a different video.',
-        duplicate: true,
-        video: existing.toPublic(),
-      });
-    }
 
     let videoUrl = '';
     let publicId = '';
     let thumbnailUrl = '';
+    let fileHash = '';
 
-    try {
-      const result = await uploadVideoBuffer(req.file.buffer, req.file.mimetype);
-      videoUrl = result.videoUrl;
-      publicId = result.publicId;
-      thumbnailUrl = result.thumbnailUrl;
-    } catch (err) {
-      console.error('Video upload error:', err);
-      return res.status(500).json({ error: 'Video upload failed. Please try again.' });
+    // Direct Cloudinary upload flow (from client)
+    if (req.body?.videoUrl) {
+      videoUrl = String(req.body.videoUrl).trim();
+      publicId = String(req.body.publicId || '').trim();
+
+      // Validate videoUrl comes from Cloudinary or trusted CDN
+      if (!/^https?:\/\/res\.cloudinary\.com\//.test(videoUrl)) {
+        return res.status(400).json({ error: 'Invalid video URL source. Must be a secure Cloudinary URL.' });
+      }
+
+      // Check if publicId already exists (duplicate check)
+      if (publicId) {
+        const existing = await Video.findOne({ publicId });
+        if (existing) {
+          return res.status(409).json({
+            error: 'This video has already been uploaded. Please choose a different video.',
+            duplicate: true,
+            video: existing.toPublic(),
+          });
+        }
+      }
+
+      thumbnailUrl = req.body.thumbnailUrl ||
+        videoUrl
+          .replace('/video/upload/', '/video/upload/f_jpg,w_640/')
+          .replace(/\.[^.]+$/, '.jpg');
+    } else {
+      // Fallback: multipart file buffer upload (capped at 4 MB)
+      if (!req.file) {
+        return res.status(400).json({ error: 'Please select a video file to upload.' });
+      }
+
+      fileHash = computeHash(req.file.buffer);
+      const existing = await Video.findOne({ fileHash });
+      if (existing) {
+        // Return existing video data so client can show success instead of error
+        return res.status(409).json({
+          error: 'This video has already been uploaded. Please choose a different video.',
+          duplicate: true,
+          video: existing.toPublic(),
+        });
+      }
+
+      try {
+        const result = await uploadVideoBuffer(req.file.buffer, req.file.mimetype);
+        videoUrl = result.videoUrl;
+        publicId = result.publicId;
+        thumbnailUrl = result.thumbnailUrl;
+      } catch (err) {
+        console.error('Video upload error:', err);
+        return res.status(500).json({ error: 'Video upload failed. Please try again.' });
+      }
     }
 
     const video = await Video.create({
