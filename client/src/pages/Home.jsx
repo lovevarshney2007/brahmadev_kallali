@@ -6,6 +6,7 @@ import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
 import Bars from '../components/Bars.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
+import CountUpNumber from '../components/CountUpNumber.jsx';
 
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Kandhar%2C%20Nanded%2C%20Maharashtra';
 
@@ -220,15 +221,33 @@ export default function Home() {
             {/* Hero Quick Daan Stats */}
             <div className="hero-stats" aria-live="polite">
               <div>
-                <strong>{summary?.received?.total !== undefined ? inr(summary.received.total) : '—'}</strong>
+                <strong>
+                  {summary?.received?.total !== undefined ? (
+                    <CountUpNumber value={summary.received.total} prefix="₹" />
+                  ) : (
+                    '—'
+                  )}
+                </strong>
                 <span>{t.hero.daanReceived}</span>
               </div>
               <div>
-                <strong>{summary?.received?.count ?? '—'}</strong>
+                <strong>
+                  {summary?.received?.count !== undefined ? (
+                    <CountUpNumber value={summary.received.count} />
+                  ) : (
+                    '—'
+                  )}
+                </strong>
                 <span>{t.hero.offerings}</span>
               </div>
               <div>
-                <strong>{summary?.spent?.total !== undefined ? inr(summary.spent.total) : '—'}</strong>
+                <strong>
+                  {summary?.spent?.total !== undefined ? (
+                    <CountUpNumber value={summary.spent.total} prefix="₹" />
+                  ) : (
+                    '—'
+                  )}
+                </strong>
                 <span>{t.hero.spentOnSeva}</span>
               </div>
             </div>
@@ -244,14 +263,16 @@ export default function Home() {
             }}
           >
             <div
+              className="hero-diya-aura"
               style={{
                 position: 'absolute',
-                width: '260px',
-                height: '260px',
+                width: '280px',
+                height: '280px',
                 borderRadius: '50%',
                 background:
-                  'radial-gradient(circle, rgba(245,176,65,.18) 0%, rgba(230,126,34,.08) 60%, transparent 80%)',
-                filter: 'blur(8px)',
+                  'radial-gradient(circle, rgba(245,176,65,.25) 0%, rgba(230,126,34,.12) 50%, transparent 75%)',
+                filter: 'blur(12px)',
+                pointerEvents: 'none',
               }}
             />
             <Shrine
@@ -364,9 +385,9 @@ export default function Home() {
           <SectionHead eyebrow={t.worship.eyebrow} title={t.worship.title}>
             <p>{t.worship.desc}</p>
           </SectionHead>
-          <div className="seva-cards" role="list">
+          <div className="seva-cards stagger-group" role="list">
             {timings.map((tRow, idx) => (
-              <article key={idx} className="seva-card" role="listitem">
+              <article key={idx} className="seva-card reveal-on-scroll" role="listitem">
                 <div className="seva-icon">
                   {/aarti/i.test(tRow.seva) ? '🪔' : /abhishek|puja/i.test(tRow.seva) ? '🕉️' : '🙏'}
                 </div>
@@ -384,7 +405,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="special-puja-card">
+          <div className="special-puja-card reveal-on-scroll">
             <div className="special-puja-icon">🕉️</div>
             <div>
               <h3>{t.worship.specialPuja}</h3>
@@ -476,7 +497,7 @@ export default function Home() {
           {/* 4 Summary Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
             <div
-              className="card"
+              className="card reveal-on-scroll"
               style={{
                 padding: '1.5rem',
                 background: 'var(--card)',
@@ -491,12 +512,12 @@ export default function Home() {
                 {t.transparency.totalReceived}
               </span>
               <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--good)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
-                {inr(totalReceived)}
+                <CountUpNumber value={totalReceived} prefix="₹" />
               </strong>
             </div>
 
             <div
-              className="card"
+              className="card reveal-on-scroll"
               style={{
                 padding: '1.5rem',
                 background: 'var(--card)',
@@ -511,12 +532,12 @@ export default function Home() {
                 {t.transparency.totalSpent}
               </span>
               <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--cta)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
-                {inr(totalSpent)}
+                <CountUpNumber value={totalSpent} prefix="₹" />
               </strong>
             </div>
 
             <div
-              className="card"
+              className="card reveal-on-scroll"
               style={{
                 padding: '1.5rem',
                 background: 'var(--card)',
@@ -531,12 +552,12 @@ export default function Home() {
                 {t.transparency.balance}
               </span>
               <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--gold)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
-                {inr(balance)}
+                <CountUpNumber value={balance} prefix="₹" />
               </strong>
             </div>
 
             <div
-              className="card"
+              className="card reveal-on-scroll"
               style={{
                 padding: '1.5rem',
                 background: 'var(--card)',
@@ -551,7 +572,7 @@ export default function Home() {
                 {t.transparency.contributors}
               </span>
               <strong style={{ display: 'block', fontSize: '1.6rem', color: 'var(--heading)', marginTop: '0.3rem', fontFamily: 'var(--display)' }}>
-                {totalContributors}
+                <CountUpNumber value={totalContributors} />
               </strong>
             </div>
           </div>

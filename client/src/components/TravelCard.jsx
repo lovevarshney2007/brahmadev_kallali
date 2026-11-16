@@ -40,7 +40,7 @@ export default function TravelCard({
 
   return (
     <article
-      className={`travel-card ${className}`}
+      className={`travel-card reveal-on-scroll ${className}`}
       style={{
         background: 'var(--card)',
         border: '1px solid var(--line)',

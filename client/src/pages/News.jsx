@@ -77,7 +77,7 @@ export default function News() {
             {defaultArticles.map((article) => (
               <article
                 key={article.id}
-                className="card"
+                className="card reveal-on-scroll"
                 style={{
                   padding: '1.8rem',
                   background: 'var(--card)',

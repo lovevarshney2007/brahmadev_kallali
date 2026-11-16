@@ -16,6 +16,7 @@ export default function FestivalCalendar({
   const [currentMonth, setCurrentMonth] = useState(initialMonth);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [expandedFestival, setExpandedFestival] = useState(null);
+  const [direction, setDirection] = useState('next');
 
   const isMr = lang === 'mr';
 
@@ -69,6 +70,7 @@ export default function FestivalCalendar({
   const calendarDescText = t?.calendarDesc || (isMr ? 'वर्षभरातील प्रमुख सण व उत्सव' : 'Key celebrations throughout the year');
 
   const prevMonth = () => {
+    setDirection('prev');
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear(y => y - 1);
@@ -78,6 +80,7 @@ export default function FestivalCalendar({
   };
 
   const nextMonth = () => {
+    setDirection('next');
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear(y => y + 1);
@@ -88,6 +91,7 @@ export default function FestivalCalendar({
 
   const goToToday = () => {
     const now = new Date();
+    setDirection(now.getMonth() < currentMonth ? 'prev' : 'next');
     setCurrentMonth(now.getMonth());
     setCurrentYear(now.getFullYear());
   };
@@ -144,7 +148,11 @@ export default function FestivalCalendar({
       )}
 
       {/* Festival Grid */}
-      <div className="fest-cal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+      <div
+        key={`${currentYear}-${currentMonth}`}
+        className={`fest-cal-grid slide-${direction}`}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}
+      >
         {monthFestivals.length > 0 ? (
           monthFestivals.map((fest) => (
             <article

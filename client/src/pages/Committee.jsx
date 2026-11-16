@@ -93,11 +93,11 @@ export default function Committee() {
               {cp.leadershipTitle}
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            <div className="stagger-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
               {leadershipList.map((item, idx) => (
                 <div
                   key={idx}
-                  className="card"
+                  className="card reveal-on-scroll"
                   style={{
                     padding: '1.5rem',
                     background: 'var(--card)',

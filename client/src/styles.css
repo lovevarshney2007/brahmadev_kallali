@@ -70,9 +70,11 @@ a{color:var(--cta)}
 .nav-dropdown-menu a{display:block;padding:.45rem 1rem;font-size:.86rem;color:var(--on-dark);text-decoration:none;white-space:nowrap;transition:background .15s,color .15s}
 .nav-dropdown-menu a:hover,.nav-dropdown-menu a.active{background:rgba(245,176,65,.15);color:var(--gold-bright)}
 
-/* Prominent Saffron Donate Button */
-.cta-donate{background:var(--cta);color:#fff !important;font-weight:700;padding:.36rem .95rem;border-radius:999px;text-decoration:none;font-size:.88rem;letter-spacing:.03em;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;box-shadow:0 2px 8px rgba(211,84,0,.4);transition:all .15s}
-.cta-donate:hover{filter:brightness(1.12);transform:translateY(-1px)}
+/* Prominent Saffron Donate Button with Auspicious Golden Shimmer */
+.cta-donate{position:relative;overflow:hidden;background:var(--cta);color:#fff !important;font-weight:700;padding:.36rem .95rem;border-radius:999px;text-decoration:none;font-size:.88rem;letter-spacing:.03em;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;box-shadow:0 2px 8px rgba(211,84,0,.4);transition:all .18s ease}
+.cta-donate::after{content:'';position:absolute;top:-50%;left:-130%;width:70%;height:200%;background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,0) 25%,rgba(255,245,205,.5) 50%,rgba(255,255,255,0) 75%,transparent 100%);transform:rotate(20deg);pointer-events:none;animation:shimmerGleam 4.6s ease-in-out infinite}
+@keyframes shimmerGleam{0%,65%{left:-130%;opacity:0}68%{opacity:.9}85%,100%{left:190%;opacity:0}}
+.cta-donate:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 4px 14px rgba(211,84,0,.5)}
 .mobile-only-donate{display:none}
 
 .menu-btn{display:none;background:none;border:1px solid rgba(251,241,221,.45);color:var(--on-dark);border-radius:6px;padding:.28rem .65rem;font:inherit;font-size:1.15rem;cursor:pointer;line-height:1}
@@ -97,7 +99,8 @@ a{color:var(--cta)}
 }
 .announce{background:var(--saffron);color:#fff;font-size:.92rem;text-align:center}
 .announce .wrap{padding-block:.4rem}
-.toran{display:block;width:100%;height:46px;background:var(--maroon-2)}
+.toran{display:block;width:100%;height:46px;background:var(--maroon-2);transform-origin:50% 0%;animation:toranBreeze 6.5s ease-in-out infinite alternate;will-change:transform}
+@keyframes toranBreeze{0%{transform:rotate(-1.2deg) skewX(-0.35deg)}50%{transform:rotate(0deg) skewX(0deg)}100%{transform:rotate(1.2deg) skewX(0.35deg)}}
 
 /* hero */
 .hero{position:relative;background:radial-gradient(ellipse at 70% 60%,#9E2A20 0%,var(--maroon) 50%,var(--maroon-2) 100%);color:var(--on-dark);overflow:hidden}
@@ -113,9 +116,11 @@ a{color:var(--cta)}
 .hero-stats span{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
 .shrine{justify-self:center;width:100%;max-width:330px}
 .shrine svg{display:block;width:100%;height:auto}
-.flame{transform-origin:150px 280px;animation:flicker 2.6s ease-in-out infinite}
-@keyframes flicker{0%,100%{transform:scale(1)}40%{transform:scale(1.06,.94)}70%{transform:scale(.95,1.05)}}
-@media (prefers-reduced-motion:reduce){.flame{animation:none}html{scroll-behavior:auto}}
+.hero-diya-aura{animation:auraBreath 4.2s ease-in-out infinite;will-change:transform,opacity}
+.diya-aura{transform-origin:150px 268px;animation:auraBreath 3.6s ease-in-out infinite alternate}
+@keyframes auraBreath{0%,100%{transform:scale(.92);opacity:.45}50%{transform:scale(1.18);opacity:.95}}
+.flame{transform-origin:150px 280px;animation:flicker 2.4s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(245,176,65,.75))}
+@keyframes flicker{0%,100%{transform:scale(1);filter:drop-shadow(0 0 5px rgba(245,176,65,.65))}35%{transform:scale(1.08,.93) rotate(-1.5deg);filter:drop-shadow(0 0 9px rgba(245,176,65,.9))}70%{transform:scale(.94,1.06) rotate(1.5deg);filter:drop-shadow(0 0 6px rgba(245,176,65,.75))}}
 @media (max-width:760px){.hero .wrap{grid-template-columns:1fr}.shrine{max-width:220px;order:-1}}
 
 /* hero slider */
@@ -420,7 +425,10 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .seva-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:1rem}
 .seva-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.25rem;display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;transition:transform .18s ease,box-shadow .18s ease}
 .seva-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px -12px rgba(0,0,0,.15)}
-.seva-icon{width:3rem;height:3rem;border-radius:50%;background:linear-gradient(135deg,var(--band),var(--card));border:2px solid var(--gold);display:grid;place-items:center;font-size:1.4rem;flex-shrink:0}
+.seva-card:hover .seva-icon,
+.special-puja-card:hover .special-puja-icon{animation:bellChime .85s cubic-bezier(.36,.07,.19,.97) both;transform-origin:top center}
+@keyframes bellChime{0%{transform:rotate(0deg)}20%{transform:rotate(-14deg)}40%{transform:rotate(12deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(3deg)}100%{transform:rotate(0deg)}}
+.seva-icon{width:3rem;height:3rem;border-radius:50%;background:linear-gradient(135deg,var(--band),var(--card));border:2px solid var(--gold);display:grid;place-items:center;font-size:1.4rem;flex-shrink:0;transition:transform .2s ease}
 .seva-content{display:grid;gap:.35rem}
 .seva-content h3{font-family:var(--display);font-weight:400;font-size:1.1rem;color:var(--heading);margin:0}
 .seva-time{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--saffron);font-weight:600}
@@ -511,8 +519,11 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .qr-frame{background:#fff;border-radius:12px;padding:12px;width:100%;max-width:240px;aspect-ratio:1;display:grid;place-items:center;color:var(--muted);font-size:.9rem}
 .qr-frame svg{width:100%;height:100%;display:block}
 .amounts{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center}
-.amounts button{background:none;border:1px solid rgba(242,196,106,.55);color:var(--on-dark);border-radius:999px;padding:.3rem .8rem;font:inherit;font-size:.92rem;cursor:pointer}
-.amounts button[aria-pressed="true"]{background:var(--gold-bright);color:var(--maroon-2);border-color:var(--gold-bright);font-weight:700}
+.amounts button{position:relative;background:none;border:1px solid rgba(242,196,106,.55);color:var(--on-dark);border-radius:999px;padding:.3rem .8rem;font:inherit;font-size:.92rem;cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),background-color .2s ease,border-color .2s ease,box-shadow .2s ease}
+.amounts button:hover{transform:translateY(-2px) scale(1.04);border-color:var(--gold-bright);box-shadow:0 4px 12px rgba(245,176,65,.25)}
+.amounts button:active{transform:scale(.96)}
+.amounts button[aria-pressed="true"]{background:var(--gold-bright);color:var(--maroon-2);border-color:var(--gold-bright);font-weight:700;transform:scale(1.05);box-shadow:0 0 16px rgba(245,176,65,.5);animation:presetPulse .42s ease-out}
+@keyframes presetPulse{0%{transform:scale(.95);box-shadow:0 0 0 0 rgba(245,176,65,.7)}50%{transform:scale(1.08);box-shadow:0 0 0 8px rgba(245,176,65,0)}100%{transform:scale(1.05);box-shadow:0 0 16px rgba(245,176,65,.5)}}
 .amounts input{width:7.5rem;background:transparent;border:1px solid rgba(242,196,106,.55);color:var(--on-dark);border-radius:999px;padding:.3rem .8rem;font:inherit;font-size:.92rem}
 .upi-line{font-size:.92rem;opacity:.9;overflow-wrap:anywhere}
 .qr-card small{opacity:.75;font-size:.84rem;max-width:34ch}
@@ -681,16 +692,17 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .upload-preview img{max-width:100%;max-height:300px;border-radius:10px;border:1px solid var(--line)}
 
 /* lightbox */
-.lightbox{position:fixed;inset:0;z-index:100;background:rgba(20,10,8,.95);display:flex;align-items:center;justify-content:center;padding:2rem;animation:fadeIn .2s ease}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.lightbox{position:fixed;inset:0;z-index:100;background:rgba(15,8,6,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:2rem;animation:lightboxFadeIn .24s cubic-bezier(.16,1,.3,1) both}
+@keyframes lightboxFadeIn{from{opacity:0}to{opacity:1}}
 .lightbox-close{position:absolute;top:1rem;right:1.5rem;font-size:2rem;background:none;border:0;color:var(--on-dark);cursor:pointer;line-height:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;transition:background .2s}
 .lightbox-close:hover{background:rgba(255,255,255,.1)}
 .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:3rem;background:none;border:0;color:var(--on-dark);cursor:pointer;line-height:1;padding:1rem;opacity:.7;transition:opacity .2s}
 .lightbox-nav:hover{opacity:1}
 .lightbox-nav.prev{left:1rem}
 .lightbox-nav.next{right:1rem}
-.lightbox-content{display:grid;grid-template-columns:1fr minmax(0,350px);gap:2rem;max-width:1100px;width:100%;max-height:85vh;align-items:center}
-.lightbox-content img{max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 20px 60px -20px rgba(0,0,0,.5)}
+.lightbox-content{display:grid;grid-template-columns:1fr minmax(0,350px);gap:2rem;max-width:1100px;width:100%;max-height:85vh;align-items:center;animation:lightboxZoomIn .28s cubic-bezier(.16,1,.3,1) both}
+@keyframes lightboxZoomIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.lightbox-content img{max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 20px 60px -20px rgba(0,0,0,.5);transition:transform .25s ease}
 .lightbox-info{display:grid;gap:.5rem;color:var(--on-dark)}
 .lightbox-info p{font-size:1.1rem;color:var(--on-dark)}
 .lightbox-meta{display:flex;flex-wrap:wrap;gap:.75rem;font-size:.9rem;color:var(--muted)}
@@ -741,4 +753,52 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 
 /* pager */
 .pager{display:flex;gap:.75rem;align-items:center;justify-content:center;flex-wrap:wrap}
+
+/* ── Festival Calendar Month Slide Transitions ─────────── */
+@keyframes calendarSlideInNext{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calendarSlideInPrev{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:translateX(0)}}
+.fest-cal-grid.slide-next{animation:calendarSlideInNext .32s cubic-bezier(.16,1,.3,1) both}
+.fest-cal-grid.slide-prev{animation:calendarSlideInPrev .32s cubic-bezier(.16,1,.3,1) both}
+
+/* ── Live Yatra Timeline Pulse Indicator ───────────────── */
+.timeline-pulse-dot{position:relative;display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--saffron);box-shadow:0 0 0 3px rgba(230,126,34,.22);transition:all .2s ease}
+.timeline-pulse-dot.live{background:var(--cta);box-shadow:0 0 0 3px rgba(211,84,0,.35)}
+.timeline-pulse-dot.live::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--cta);animation:pulseRipple 2.2s cubic-bezier(.25,.46,.45,.94) infinite}
+@keyframes pulseRipple{0%{transform:scale(.6);opacity:.95}70%{transform:scale(2.3);opacity:.15}100%{transform:scale(2.8);opacity:0}}
+.timeline-badge-live{font-size:.72rem;background:var(--cta);color:#fff;padding:.12rem .55rem;border-radius:999px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;animation:badgeBlink 2.4s ease-in-out infinite}
+@keyframes badgeBlink{0%,100%{opacity:1}50%{opacity:.75}}
+
+/* ── Staggered Scroll Fade-Up (Gentle Content Reveal) ──── */
+.reveal-on-scroll{opacity:0;transform:translateY(18px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
+.reveal-on-scroll.is-revealed{opacity:1;transform:translateY(0)}
+.stagger-group > *:nth-child(1){transition-delay:.05s}
+.stagger-group > *:nth-child(2){transition-delay:.10s}
+.stagger-group > *:nth-child(3){transition-delay:.15s}
+.stagger-group > *:nth-child(4){transition-delay:.20s}
+.stagger-group > *:nth-child(5){transition-delay:.25s}
+.stagger-group > *:nth-child(6){transition-delay:.30s}
+
+/* ── Rolling Number Counters ────────────────────────────── */
+.count-up-number{display:inline-block;font-variant-numeric:tabular-nums;transition:opacity .2s ease}
+
+/* ── Accessibility: Prefers-Reduced-Motion ──────────────── */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto !important}
+  .toran,
+  .flame,
+  .hero-diya-aura,
+  .diya-aura,
+  .cta-donate::after,
+  .amounts button[aria-pressed="true"],
+  .fest-cal-grid.slide-next,
+  .fest-cal-grid.slide-prev,
+  .lightbox,
+  .lightbox-content,
+  .timeline-pulse-dot.live::after,
+  .timeline-badge-live,
+  .seva-card:hover .seva-icon,
+  .special-puja-card:hover .special-puja-icon{animation:none !important}
+  .reveal-on-scroll{opacity:1 !important;transform:none !important;transition:none !important}
+  .cta-donate::after{display:none !important}
+}
 
