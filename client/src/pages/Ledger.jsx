@@ -5,6 +5,7 @@ import { api, inr, fmtDate } from '../api.js';
 import { SectionHead } from '../components/Decor.jsx';
 import Bars from '../components/Bars.jsx';
 import PhotoGrid from '../components/PhotoGrid.jsx';
+import CountUpNumber from '../components/CountUpNumber.jsx';
 
 export default function Ledger() {
   const { summary, settings, lang, t } = useSite();
@@ -79,20 +80,20 @@ export default function Ledger() {
         </SectionHead>
 
         {/* ── 4 Financial Summary Tiles ── */}
-        <div className="ledger-top" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-          <div className="tile in">
+        <div className="ledger-top stagger-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          <div className="tile in reveal-on-scroll">
             <span>{t.ledgerPage.totalReceived}</span>
-            <strong>{r ? inr(r.total) : '—'}</strong>
+            <strong>{r ? <CountUpNumber value={r.total} prefix="₹" /> : '—'}</strong>
             <em>{r ? (isMr ? `${r.count} देणग्या` : `${r.count} offerings`) : ''}</em>
           </div>
-          <div className="tile out">
+          <div className="tile out reveal-on-scroll">
             <span>{t.ledgerPage.spentOnSeva}</span>
-            <strong>{s ? inr(s.total) : '—'}</strong>
+            <strong>{s ? <CountUpNumber value={s.total} prefix="₹" /> : '—'}</strong>
             <em>{s ? (isMr ? `${s.count} खर्च नोंदी` : `${s.count} expenses`) : ''}</em>
           </div>
-          <div className="tile bal">
+          <div className="tile bal reveal-on-scroll">
             <span>{t.ledgerPage.balance}</span>
-            <strong>{summary?.balance !== undefined ? inr(summary.balance) : '—'}</strong>
+            <strong>{summary?.balance !== undefined ? <CountUpNumber value={summary.balance} prefix="₹" /> : '—'}</strong>
             <em>
               {r?.total && s?.total !== undefined
                 ? `${Math.round((s.total / r.total) * 100)}% ${t.ledgerPage.usedSoFar}`
@@ -101,9 +102,15 @@ export default function Ledger() {
                 : 'Received minus spent'}
             </em>
           </div>
-          <div className="tile in" style={{ borderLeftColor: 'var(--saffron)' }}>
+          <div className="tile in reveal-on-scroll" style={{ borderLeftColor: 'var(--saffron)' }}>
             <span>{t.ledgerPage.contributors}</span>
-            <strong>{r?.contributors ?? r?.count ?? '—'}</strong>
+            <strong>
+              {r?.contributors !== undefined || r?.count !== undefined ? (
+                <CountUpNumber value={r?.contributors ?? r?.count ?? 0} />
+              ) : (
+                '—'
+              )}
+            </strong>
             <em>{isMr ? 'नोंदणीकृत देणगीदार' : 'Unique contributors'}</em>
           </div>
         </div>

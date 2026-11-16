@@ -40,7 +40,14 @@ export function Shrine() {
         <rect x="70" y="190" width="160" height="96" fill="#7B241C" />
         <path d="M126 286 V236 a24 24 0 0 1 48 0 V286z" fill="#2C1E16" />
         <rect x="84" y="204" width="22" height="70" fill="#F5B041" opacity=".45" />
-        <rect x="194" y="204" width="22" height="70" fill="#F5B041" opacity=".45" />
+        <defs>
+          <radialGradient id="diyaHalo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#F5B041" stopOpacity="0.85" />
+            <stop offset="45%" stopColor="#E67E22" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#E67E22" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle className="diya-aura" cx="150" cy="268" r="34" fill="url(#diyaHalo)" />
         <ellipse cx="150" cy="284" rx="16" ry="5" fill="#F5B041" />
         <path className="flame" d="M150 254 C143 266 143 276 150 280 C157 276 157 266 150 254z" fill="#F39C12" />
         <rect x="50" y="286" width="200" height="14" fill="#F5B041" />

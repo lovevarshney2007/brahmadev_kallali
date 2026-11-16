@@ -270,32 +270,60 @@ export default function Yatra() {
                         ? 'काल्याचे कीर्तनाने यात्रेची सांगता व समस्त भाविकांना महाप्रसाद वाटप.'
                         : 'Concluding kirtan discourse followed by massive community feast (Annadaan).',
                     },
-                  ].map((item, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: '1.25rem',
-                        background: 'var(--band)',
-                        borderRadius: '12px',
-                        borderLeft: '4px solid var(--saffron)',
-                        display: 'grid',
-                        gap: '0.4rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <span className="eyebrow" style={{ color: 'var(--cta)', fontWeight: 700 }}>
-                          {item.day}
-                        </span>
-                        <span className="small muted">{item.timing}</span>
+                  ].map((item, idx) => {
+                    const isUpcomingOrLive = idx === 0;
+                    return (
+                      <div
+                        key={idx}
+                        className={`yatra-timeline-card ${isUpcomingOrLive ? 'is-live' : ''} reveal-on-scroll`}
+                        style={{
+                          position: 'relative',
+                          padding: '1.25rem 1.25rem 1.25rem 3rem',
+                          background: 'var(--band)',
+                          borderRadius: '12px',
+                          borderLeft: `4px solid ${isUpcomingOrLive ? 'var(--cta)' : 'var(--saffron)'}`,
+                          display: 'grid',
+                          gap: '0.4rem',
+                          boxShadow: isUpcomingOrLive ? '0 4px 18px rgba(211,84,0,0.12)' : 'none',
+                        }}
+                      >
+                        {/* Sacred Timeline Dot with concentric pulse on upcoming/live ritual */}
+                        <div
+                          className="yatra-timeline-marker"
+                          style={{
+                            position: 'absolute',
+                            left: '1rem',
+                            top: '1.4rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span className={`timeline-pulse-dot ${isUpcomingOrLive ? 'live' : ''}`} />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className="eyebrow" style={{ color: 'var(--cta)', fontWeight: 700 }}>
+                              {item.day}
+                            </span>
+                            {isUpcomingOrLive && (
+                              <span className="timeline-badge-live">
+                                {isMr ? 'आगामी / प्रारंभ' : 'Upcoming / Inaugural'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="small muted">{item.timing}</span>
+                        </div>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--heading)' }}>
+                          {item.title}
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--fg)', opacity: 0.9 }}>
+                          {item.desc}
+                        </p>
                       </div>
-                      <h4 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--heading)' }}>
-                        {item.title}
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--fg)', opacity: 0.9 }}>
-                        {item.desc}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
