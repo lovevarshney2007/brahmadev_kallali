@@ -28,8 +28,11 @@ router.get('/public/videos', ah(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const filter = { approved: true };
-  if (req.query.event && req.query.event !== 'All') {
-    filter.event = req.query.event;
+  if (typeof req.query.event === 'string') {
+    const event = req.query.event.trim();
+    if (event && event !== 'All') {
+      filter.event = event;
+    }
   }
 
   const [items, total] = await Promise.all([
@@ -120,7 +123,7 @@ router.post('/public/videos/:id/like', ah(async (req, res) => {
 
 // 4. Admin: Get all videos (pending & approved)
 router.get('/admin/videos', requireAdmin, ah(async (req, res) => {
-  const statusFilter = req.query.status;
+  const statusFilter = typeof req.query.status === 'string' ? req.query.status.trim() : '';
   const filter = {};
   if (statusFilter === 'pending') filter.approved = false;
   if (statusFilter === 'approved') filter.approved = true;
