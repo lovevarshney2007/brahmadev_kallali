@@ -15,25 +15,22 @@ export async function connectDB(uri = env.mongoUri) {
     console.log(`MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);
     isConnecting = null;
 
-    // Ensure admin exists (development only, or if explicitly configured in env)
+    // Ensure default admin credentials exist for the temple trustees
     try {
-      const isConfigured = Boolean(process.env.ADMIN_DEFAULT_PASSWORD);
-      if (!env.isProd || isConfigured) {
-        const email = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@brahmadev.org').toLowerCase();
-        const existing = await Admin.findOne({ email });
-        if (!existing) {
-          const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Brahmadev@2026';
-          const passwordHash = await Admin.hashPassword(defaultPassword);
-          await Admin.create({
-            name: 'Temple Trustee',
-            email,
-            passwordHash,
-          });
-          console.log(`Admin account initialized: ${email}`);
-        }
+      const email = (process.env.ADMIN_DEFAULT_EMAIL || 'admin@brahmadev.org').toLowerCase();
+      const existing = await Admin.findOne({ email });
+      if (!existing) {
+        const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Brahmadev@2026';
+        const passwordHash = await Admin.hashPassword(defaultPassword);
+        await Admin.create({
+          name: 'Temple Trustee',
+          email,
+          passwordHash,
+        });
+        console.log(`Admin account initialized: ${email}`);
       }
     } catch (err) {
-      console.error('Admin initialization notice:', err.message);
+      console.error('Admin initialization error:', err.message);
     }
 
     return conn;
