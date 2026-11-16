@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
 /**
  * QRPlaceholder - QR Code placeholder component ready for trust integration

@@ -37,7 +37,7 @@ function VoidButton({ onVoid }) {
   );
 }
 
-function Donations({ purposes, onChange }) {
+function Donations({ purposes = [], onChange }) {
   const blank = { date: today(), donorName: '', showName: false, phone: '', amount: '', purpose: 'General daan', source: 'upi', ref: '', note: '' };
   const [f, setF] = useState(blank);
   const [list, setList] = useState(null);
@@ -115,7 +115,7 @@ function Donations({ purposes, onChange }) {
   );
 }
 
-function Expenses({ purposes, onChange }) {
+function Expenses({ purposes = [], onChange }) {
   const blank = { date: today(), item: '', amount: '', purpose: 'Temple upkeep', paidTo: '', billNo: '' };
   const [f, setF] = useState(blank);
   const [list, setList] = useState(null);
@@ -449,9 +449,9 @@ export default function AdminDashboard() {
           <button className="btn small" onClick={logout}>Sign out</button>
         </div>
         <div className="ledger-top">
-          <div className="tile in"><span>Received</span><strong>{summary ? inr(summary.received.total) : '—'}</strong><em>{summary?.received.count ?? 0} offerings</em></div>
-          <div className="tile out"><span>Spent</span><strong>{summary ? inr(summary.spent.total) : '—'}</strong><em>{summary?.spent.count ?? 0} expenses</em></div>
-          <div className="tile bal"><span>Balance</span><strong>{summary ? inr(summary.balance) : '—'}</strong><em>Should match the trust's bank balance</em></div>
+          <div className="tile in"><span>Received</span><strong>{summary?.received ? inr(summary.received.total) : '—'}</strong><em>{summary?.received?.count ?? 0} offerings</em></div>
+          <div className="tile out"><span>Spent</span><strong>{summary?.spent ? inr(summary.spent.total) : '—'}</strong><em>{summary?.spent?.count ?? 0} expenses</em></div>
+          <div className="tile bal"><span>Balance</span><strong>{summary?.balance !== undefined ? inr(summary.balance) : '—'}</strong><em>Should match the trust's bank balance</em></div>
         </div>
         <div className="tabs" role="tablist" style={{ justifySelf: 'start' }}>
           {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>{l}</button>)}

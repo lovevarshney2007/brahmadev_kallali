@@ -38,7 +38,7 @@ export default function Donate() {
   const upi = settings?.upiId;
   const upiUri = useMemo(() => {
     if (!upi || !UPI_RE.test(upi)) return null;
-    const p = new URLSearchParams({ pa: upi, pn: settings.payeeName || 'Shri Brahmadev Devasthan', cu: 'INR', tn: `Daan - ${purpose}` });
+    const p = new URLSearchParams({ pa: upi, pn: settings?.payeeName || 'Shri Brahmadev Devasthan', cu: 'INR', tn: `Daan - ${purpose}` });
     if (finalAmount > 0) p.set('am', finalAmount.toFixed(2));
     return `upi://pay?${p.toString()}`;
   }, [upi, settings, finalAmount, purpose]);
@@ -123,7 +123,7 @@ export default function Donate() {
             <QRPlaceholder
               upiId={upi}
               upiUri={upiUri}
-              payeeName={settings.payeeName || 'Shri Brahmadev Devasthan'}
+              payeeName={settings?.payeeName || 'Shri Brahmadev Devasthan'}
               amount={finalAmount}
               size={216}
               showAmount={true}

@@ -48,8 +48,8 @@ export default function Ledger() {
           </div>
           <div className="tile bal">
             <span>{t.ledgerPage.balance}</span>
-            <strong>{summary ? inr(summary.balance) : '—'}</strong>
-            <em>{r?.total ? `${Math.round((s.total / r.total) * 100)}% ${t.ledgerPage.usedSoFar}` : (isMr ? 'जमा वजा खर्च' : 'Received minus spent')}</em>
+            <strong>{summary?.balance !== undefined ? inr(summary.balance) : '—'}</strong>
+            <em>{(r?.total && s?.total !== undefined) ? `${Math.round((s.total / r.total) * 100)}% ${t.ledgerPage.usedSoFar}` : (isMr ? 'जमा वजा खर्च' : 'Received minus spent')}</em>
           </div>
         </div>
 

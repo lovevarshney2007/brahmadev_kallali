@@ -92,9 +92,9 @@ export default function Home() {
               <Link className="btn light" to="/ledger">{t.hero.seeLedger}</Link>
             </div>
             <div className="hero-stats" aria-live="polite">
-              <div><strong>{summary ? inr(summary.received.total) : '—'}</strong><span>{t.hero.daanReceived}</span></div>
-              <div><strong>{summary ? summary.received.count : '—'}</strong><span>{t.hero.offerings}</span></div>
-              <div><strong>{summary ? inr(summary.spent.total) : '—'}</strong><span>{t.hero.spentOnSeva}</span></div>
+              <div><strong>{summary?.received?.total !== undefined ? inr(summary.received.total) : '—'}</strong><span>{t.hero.daanReceived}</span></div>
+              <div><strong>{summary?.received?.count ?? '—'}</strong><span>{t.hero.offerings}</span></div>
+              <div><strong>{summary?.spent?.total !== undefined ? inr(summary.spent.total) : '—'}</strong><span>{t.hero.spentOnSeva}</span></div>
             </div>
           </div>
 

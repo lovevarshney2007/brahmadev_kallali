@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { SiteProvider } from './SiteContext.jsx';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Route-level code-splitting: Keeps initial bundle tiny and fast
 const Home = lazy(() => import('./pages/Home.jsx'));
@@ -41,17 +42,19 @@ export default function App() {
       <ScrollManager />
       <Header />
       <main>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/donate" element={<Donate />} />
-            <Route path="/ledger" element={<Ledger />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/donate" element={<Donate />} />
+              <Route path="/ledger" element={<Ledger />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
       <Footer />
     </SiteProvider>

@@ -44,4 +44,13 @@ export function SiteProvider({ children }) {
   );
 }
 
-export const useSite = () => useContext(SiteContext);
+const defaultSiteValue = {
+  settings: null,
+  summary: null,
+  refresh: () => {},
+  lang: 'mr',
+  setLang: () => {},
+  t: translations.mr,
+};
+
+export const useSite = () => useContext(SiteContext) || defaultSiteValue;
