@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
+import { LotusRule } from '../components/Decor.jsx';
 
 export default function Committee() {
   const { t, lang } = useSite();
@@ -146,6 +147,10 @@ export default function Committee() {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div style={{ display: 'grid', placeItems: 'center', margin: '2.5rem 0 1.5rem' }}>
+            <LotusRule />
           </div>
 
           {/* Governance & Transparency Card */}

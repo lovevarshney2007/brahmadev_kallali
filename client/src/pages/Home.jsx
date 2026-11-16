@@ -175,8 +175,6 @@ export default function Home() {
 
   return (
     <>
-      <Toran />
-
       {/* ── 1. HERO BANNER ────────────────────────────────────────── */}
       <section className="hero" id="home">
         <div className="wrap">
