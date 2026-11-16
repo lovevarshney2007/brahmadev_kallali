@@ -11,14 +11,6 @@
   --body:"Mukta","Noto Sans Devanagari",system-ui,sans-serif;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark){:root{
-  --bg:#1A120E; --band:#241A14; --card:#2C201A; --fg:#F4ECE1; --muted:#BBA99B; --line:#4A372C;
-  --heading:#F5B041; --maroon:#681C15; --maroon-2:#420E0A; --saffron:#F39C12; --saffron-gold:#F5B041;
-  --gold:#E5A84B; --gold-bright:#F5B041; --cta:#E67E22; --lotus:#E89E96;
-  --good:#66BB6A; --danger:#E57373;
-  --good-bg:rgba(102,187,106,.18); --warn:#E5A84B; --warn-bg:rgba(229,168,75,.18); --danger-bg:rgba(229,115,115,.18);
-  color-scheme: dark;
-}}
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;overflow-x:hidden}
