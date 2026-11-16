@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
+import { Toran } from './Decor.jsx';
 
 export function Logo({ size = 34 }) {
   return (
@@ -268,6 +269,8 @@ export default function Header() {
           <div className="wrap">{settings.announcement}</div>
         </div>
       )}
+
+      <Toran />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useSite } from '../SiteContext.jsx';
 import { inr, api, fmtDate } from '../api.js';
-import { Toran, Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
+import { Shrine, SectionHead, Tbc } from '../components/Decor.jsx';
 import Bars from '../components/Bars.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
@@ -174,8 +174,6 @@ export default function Home() {
 
   return (
     <>
-      <Toran />
-
       {/* ── 1. HERO BANNER ────────────────────────────────────────── */}
       <section className="hero" id="home">
         <div className="wrap">
