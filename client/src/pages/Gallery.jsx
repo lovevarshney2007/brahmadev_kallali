@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 import { api, fmtDate } from '../api.js';
 
@@ -39,18 +39,24 @@ export default function Gallery() {
   const { settings, refresh, lang } = useSite();
   const isMr = lang === 'mr';
 
-  // ── Tab state: 'photos' | 'videos' | 'upload' ──────────────
-  const [tab, setTab] = useState('photos');
-  const [uploadType, setUploadType] = useState('photo'); // 'photo' | 'video'
+  // ── URL-synchronized Tab state: 'photos' | 'videos' | 'upload' ──────────────
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawTab = searchParams.get('tab');
+  const tab = (rawTab === 'videos' || rawTab === 'upload') ? rawTab : 'photos';
 
-  // ── Read ?tab= from URL ───────────────────────────────────
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const t = p.get('tab');
-    if (t === 'videos' || t === 'upload' || t === 'photos') {
-      setTab(t);
-    }
-  }, []);
+  const setTab = (newTab) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newTab === 'photos') {
+        next.delete('tab');
+      } else {
+        next.set('tab', newTab);
+      }
+      return next;
+    }, { replace: true });
+  };
+
+  const [uploadType, setUploadType] = useState('photo'); // 'photo' | 'video'
 
   // ── Photos ──────────────────────────────────────────────────
   const [photos, setPhotos] = useState(null);

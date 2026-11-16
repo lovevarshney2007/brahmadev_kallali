@@ -196,15 +196,18 @@ function RowsEditor({ rows, setRows, fields }) {
   const update = (i, k, v) => setRows(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
   return (
     <div className="rows">
-      {rows.map((r, i) => (
-        <div className="row-edit" key={i}>
-          {fields.map(([k, label]) => (
-            <input key={k} aria-label={label} placeholder={label} value={r[k] || ''} onChange={(e) => update(i, k, e.target.value)}
-              style={{ font: 'inherit', padding: '.45rem .6rem', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--bg)', color: 'var(--fg)', minWidth: 0 }} />
-          ))}
-          <button type="button" className="btn small" onClick={() => setRows(rows.filter((_, j) => j !== i))}>Remove</button>
-        </div>
-      ))}
+      {rows.map((r, i) => {
+        const rowKey = r._id || r.id || r._key || (r._key = `row_${i}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
+        return (
+          <div className="row-edit" key={rowKey}>
+            {fields.map(([k, label]) => (
+              <input key={k} aria-label={label} placeholder={label} value={r[k] || ''} onChange={(e) => update(i, k, e.target.value)}
+                style={{ font: 'inherit', padding: '.45rem .6rem', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--bg)', color: 'var(--fg)', minWidth: 0 }} />
+            ))}
+            <button type="button" className="btn small" onClick={() => setRows(rows.filter((_, j) => j !== i))}>Remove</button>
+          </div>
+        );
+      })}
       <div><button type="button" className="btn small" onClick={() => setRows([...rows, {}])}>Add row</button></div>
     </div>
   );
