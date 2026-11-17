@@ -6,6 +6,7 @@ import Footer from './components/Footer.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import QuickActionBadges from './components/QuickActionBadges.jsx';
 import SocialFloatingBar from './components/SocialFloatingBar.jsx';
+import FloatingDiya from './components/FloatingDiya.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Route-level code-splitting: Keeps initial bundle tiny and fast
@@ -164,6 +165,7 @@ export default function App() {
       <QuickActionBadges />
       <SocialFloatingBar />
       <ScrollToTop />
+      <FloatingDiya />
     </SiteProvider>
   );
 }
