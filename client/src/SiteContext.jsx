@@ -27,6 +27,32 @@ export function SiteProvider({ children }) {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  const [fontSize, setFontSizeState] = useState(() => {
+    try {
+      return localStorage.getItem('brahmadev_fontsize') || 'normal';
+    } catch {
+      return 'normal';
+    }
+  });
+
+  const setFontSize = useCallback((size) => {
+    setFontSizeState(size);
+    try {
+      localStorage.setItem('brahmadev_fontsize', size);
+    } catch {}
+    if (size === 'small') {
+      document.documentElement.style.fontSize = '90%';
+    } else if (size === 'large') {
+      document.documentElement.style.fontSize = '112%';
+    } else {
+      document.documentElement.style.fontSize = '100%';
+    }
+  }, []);
+
+  useEffect(() => {
+    setFontSize(fontSize);
+  }, [fontSize, setFontSize]);
+
   const refresh = useCallback(async () => {
     const [s, sum] = await Promise.allSettled([api('/public/settings'), api('/public/summary')]);
     if (s.status === 'fulfilled') setSettings(s.value);
@@ -38,7 +64,7 @@ export function SiteProvider({ children }) {
   const t = translations[lang] || translations.mr;
 
   return (
-    <SiteContext.Provider value={{ settings, summary, refresh, lang, setLang, t }}>
+    <SiteContext.Provider value={{ settings, summary, refresh, lang, setLang, fontSize, setFontSize, t }}>
       {children}
     </SiteContext.Provider>
   );
@@ -50,6 +76,8 @@ const defaultSiteValue = {
   refresh: () => {},
   lang: 'mr',
   setLang: () => {},
+  fontSize: 'normal',
+  setFontSize: () => {},
   t: translations.mr,
 };
 

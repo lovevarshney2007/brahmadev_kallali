@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 import { Toran } from './Decor.jsx';
+import SearchModal from './SearchModal.jsx';
 
 export function Logo({ size = 34 }) {
   return (
@@ -19,7 +20,8 @@ export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState(null); // null | 'about' | 'yatra'
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { settings, lang, setLang, t } = useSite();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { settings, lang, setLang, fontSize, setFontSize, t } = useSite();
   const location = useLocation();
   const navRef = useRef(null);
   const timerRef = useRef(null);
@@ -73,6 +75,18 @@ export default function Header() {
   useEffect(() => {
     close();
   }, [location.pathname, location.hash, location.search]);
+
+  // Global Ctrl+K / Cmd+K shortcut to open search modal
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -247,8 +261,54 @@ export default function Header() {
             </ul>
           </nav>
 
-          {/* Right Actions: Lang toggle + Prominent Saffron Donate + Mobile Menu Button */}
+          {/* Right Actions: Font Resizer + Search + Lang toggle + Donate + Mobile Menu Button */}
           <div className="header-actions">
+            {/* Font Size Accessibility Controls (A- A A+) */}
+            <div className="font-resizer" role="group" aria-label="Font size controls">
+              <button
+                type="button"
+                className={`font-btn${fontSize === 'small' ? ' active' : ''}`}
+                onClick={() => setFontSize('small')}
+                title="लहान अक्षर / Small text (A-)"
+                aria-label="Small font size (A-)"
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                className={`font-btn${fontSize === 'normal' ? ' active' : ''}`}
+                onClick={() => setFontSize('normal')}
+                title="सामान्य अक्षर / Normal text (A)"
+                aria-label="Normal font size (A)"
+              >
+                A
+              </button>
+              <button
+                type="button"
+                className={`font-btn${fontSize === 'large' ? ' active' : ''}`}
+                onClick={() => setFontSize('large')}
+                title="मोठे अक्षर / Large text (A+)"
+                aria-label="Large font size (A+)"
+              >
+                A+
+              </button>
+            </div>
+
+            {/* Quick Search Button (🔍) */}
+            <button
+              type="button"
+              className="header-search-btn"
+              onClick={() => setSearchOpen(true)}
+              title={lang === 'mr' ? 'वेबसाईटवर शोधा (Ctrl+K)' : 'Search temple site (Ctrl+K)'}
+              aria-label="Search temple website"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+
+            {/* Language Selection Toggle */}
             <div className="lang-toggle" role="group" aria-label="Language selection">
               <button
                 type="button"
@@ -302,6 +362,9 @@ export default function Header() {
       )}
 
       <Toran />
+
+      {/* Global Interactive Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
