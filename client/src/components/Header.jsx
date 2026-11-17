@@ -252,6 +252,40 @@ export default function Header() {
                 </Link>
               </li>
 
+              {/* Mobile text size controls inside navigation drawer */}
+              <li className="mobile-menu-font-resizer">
+                <span className="mobile-menu-font-label">{lang === 'mr' ? 'अक्षर आकार:' : 'Text Size:'}</span>
+                <div className="font-resizer" role="group" aria-label="Font size controls">
+                  <button
+                    type="button"
+                    className={`font-btn${fontSize === 'small' ? ' active' : ''}`}
+                    onClick={() => setFontSize('small')}
+                    title="लहान अक्षर (A-)"
+                    aria-label="Small font size"
+                  >
+                    A-
+                  </button>
+                  <button
+                    type="button"
+                    className={`font-btn${fontSize === 'normal' ? ' active' : ''}`}
+                    onClick={() => setFontSize('normal')}
+                    title="सामान्य अक्षर (A)"
+                    aria-label="Normal font size"
+                  >
+                    A
+                  </button>
+                  <button
+                    type="button"
+                    className={`font-btn${fontSize === 'large' ? ' active' : ''}`}
+                    onClick={() => setFontSize('large')}
+                    title="मोठे अक्षर (A+)"
+                    aria-label="Large font size"
+                  >
+                    A+
+                  </button>
+                </div>
+              </li>
+
               {/* Mobile-only donate link inside nav list */}
               <li className="mobile-only-donate">
                 <Link className="cta-donate full-width" to="/donate" onClick={close}>
@@ -263,8 +297,8 @@ export default function Header() {
 
           {/* Right Actions: Font Resizer + Search + Lang toggle + Donate + Mobile Menu Button */}
           <div className="header-actions">
-            {/* Font Size Accessibility Controls (A- A A+) */}
-            <div className="font-resizer" role="group" aria-label="Font size controls">
+            {/* Font Size Accessibility Controls (A- A A+) - Desktop only */}
+            <div className="font-resizer desktop-only-font-resizer" role="group" aria-label="Font size controls">
               <button
                 type="button"
                 className={`font-btn${fontSize === 'small' ? ' active' : ''}`}
