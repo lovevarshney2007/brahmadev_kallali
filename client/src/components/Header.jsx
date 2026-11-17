@@ -17,10 +17,34 @@ export function Logo({ size = 34 }) {
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null); // null | 'about' | 'yatra'
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { settings, lang, setLang, t } = useSite();
   const location = useLocation();
   const navRef = useRef(null);
   const timerRef = useRef(null);
+
+  // Dynamic header elevation and reading scroll progress
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollTop = window.scrollY || document.documentElement.scrollTop;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+          setScrollProgress(Math.min(100, Math.max(0, progress)));
+          setIsScrolled(scrollTop > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const close = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -88,7 +112,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="site-header">
+      <header className={`site-header${isScrolled ? ' is-scrolled' : ''}`}>
         <div className="wrap header-wrap">
           {/* Brand Left */}
           <Link className="brand" to="/" onClick={close}>
@@ -262,6 +286,13 @@ export default function Header() {
             </button>
           </div>
         </div>
+
+        {/* Auspicious golden scroll reading progress indicator */}
+        <div
+          className="scroll-progress-bar"
+          style={{ width: `${scrollProgress}%` }}
+          aria-hidden="true"
+        />
       </header>
 
       {settings?.announcement && (

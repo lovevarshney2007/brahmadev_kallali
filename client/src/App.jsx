@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { SiteProvider } from './SiteContext.jsx';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Route-level code-splitting: Keeps initial bundle tiny and fast
@@ -79,22 +80,48 @@ function ScrollManager() {
         });
       },
       {
-        threshold: 0.1,
-        rootMargin: '0px 0px -40px 0px',
+        threshold: 0.08,
+        rootMargin: '0px 0px -30px 0px',
       }
     );
 
     const scan = () => {
+      // 1. Observe elements explicitly marked with .reveal-on-scroll
       document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)').forEach((el) => {
         observer.observe(el);
+      });
+
+      // 2. Automatically observe major section and card blocks across all pages
+      const autoSelectors = [
+        'main .sec > .wrap > .head',
+        'main .sec .card',
+        'main .sec .tile',
+        'main .split > *',
+        'main .cols > *',
+        'main .photo-item',
+        'main .video-card',
+        'main .home-video-card',
+        'main .travel-card',
+        'main .fest-cal-card',
+        'main .timeline li',
+        'main .tablebox',
+        'main .committee-card'
+      ];
+      document.querySelectorAll(autoSelectors.join(', ')).forEach((el) => {
+        if (!el.classList.contains('reveal-on-scroll') && !el.classList.contains('is-revealed')) {
+          el.classList.add('reveal-on-scroll');
+          observer.observe(el);
+        }
       });
     };
 
     scan();
-    const timer = setTimeout(scan, 400);
+    const timer1 = setTimeout(scan, 200);
+    const timer2 = setTimeout(scan, 600);
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       observer.disconnect();
     };
   }, [pathname]);
@@ -132,6 +159,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <Footer />
+      <ScrollToTop />
     </SiteProvider>
   );
 }
