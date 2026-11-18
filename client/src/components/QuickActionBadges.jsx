@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 
 /**
@@ -7,13 +7,56 @@ import { useSite } from '../SiteContext.jsx';
  * Floating Quick-Action Badges fixed to the left edge of the screen (similar to Shirdi Saibaba Trust).
  * 1. Quick "दान / Donate" Button -> Navigates to /donate
  * 2. Quick "दर्शन / आरती वेळा" Button -> Opens sacred Darshan & Aarti Schedule modal
+ * Hidden while hero slider is in view, visible on the rest of the page.
  */
 export default function QuickActionBadges() {
   const { lang, settings } = useSite();
   const [modalOpen, setModalOpen] = useState(false);
+  const location = useLocation();
   const isMr = lang === 'mr';
 
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isHome = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/history' || location.pathname === '/worship' || location.pathname === '/festivals' || location.pathname === '/visit' || location.pathname === '/contact';
+    if (!isHome) return true;
+    if (location.hash || location.pathname !== '/') return window.scrollY > 200;
+    return false;
+  });
+
   const contactPhone = settings?.contact?.phone || '9503131031';
+
+  // Hide badges when hero slider is occupying the screen on homepage
+  useEffect(() => {
+    const isHome = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/history' || location.pathname === '/worship' || location.pathname === '/festivals' || location.pathname === '/visit' || location.pathname === '/contact';
+    if (!isHome) {
+      setIsVisible(true);
+      return;
+    }
+
+    const checkSliderOverlap = () => {
+      const sliderEl = document.querySelector('.hero-slider-section') || document.querySelector('.hero-slider');
+      if (sliderEl) {
+        const rect = sliderEl.getBoundingClientRect();
+        // Visible only when slider has scrolled past the upper viewport (bottom <= 80px, behind/above sticky header)
+        setIsVisible(rect.bottom <= 80);
+      } else {
+        setIsVisible(true);
+      }
+    };
+
+    checkSliderOverlap();
+    const t1 = setTimeout(checkSliderOverlap, 100);
+    const t2 = setTimeout(checkSliderOverlap, 400);
+
+    window.addEventListener('scroll', checkSliderOverlap, { passive: true });
+    window.addEventListener('resize', checkSliderOverlap, { passive: true });
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('scroll', checkSliderOverlap);
+      window.removeEventListener('resize', checkSliderOverlap);
+    };
+  }, [location.pathname]);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -40,7 +83,7 @@ export default function QuickActionBadges() {
   return (
     <>
       {/* Floating Left-Side Badges */}
-      <aside className="quick-action-badges" aria-label="त्वरित सेवा / Quick Actions">
+      <aside className={`quick-action-badges ${isVisible ? 'is-visible' : 'is-hidden'}`} aria-label="त्वरित सेवा / Quick Actions">
         {/* 1. Quick Donate Button */}
         <Link
           to="/donate"

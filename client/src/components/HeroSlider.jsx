@@ -159,9 +159,24 @@ export default function HeroSlider({
       onTouchEnd={handleTouchEnd}
       tabIndex="0"
     >
-      <div className="hero-slider-track" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+      <div
+        className="hero-slider-track"
+        style={{
+          transform: `translateX(-${currentIndex * 100}%)`,
+          display: 'flex',
+          width: '100%',
+        }}
+      >
         {validSlides.map((slide, index) => (
-          <div key={index} className="hero-slider-slide" style={{ width: `${100 / slideCount}%` }}>
+          <div
+            key={index}
+            className="hero-slider-slide"
+            style={{
+              flex: '0 0 100%',
+              minWidth: '100%',
+              width: '100%',
+            }}
+          >
             <img
               src={slide.image}
               alt={slide.alt || `Temple view ${index + 1}`}

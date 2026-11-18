@@ -1,20 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 
 /**
  * SocialFloatingBar:
  * Floating Social Media stack on the right edge of the screen (similar to Shirdi Saibaba Trust).
- * Includes:
- * - Collapse/Expand toggle (- / +)
- * - WhatsApp (Direct community/helpline chat with 9503131031)
- * - YouTube (Temple bhajans, aarti & festival videos)
- * - Instagram (Daily darshan, photos & reels)
- * - Facebook (Community page & announcements)
+ * Hidden while hero slider is in view, visible on the rest of the page.
  */
 export default function SocialFloatingBar() {
   const [collapsed, setCollapsed] = useState(false);
   const { lang, settings } = useSite();
+  const location = useLocation();
   const isMr = lang === 'mr';
+
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isHome = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/history' || location.pathname === '/worship' || location.pathname === '/festivals' || location.pathname === '/visit' || location.pathname === '/contact';
+    if (!isHome) return true;
+    if (location.hash || location.pathname !== '/') return window.scrollY > 200;
+    return false;
+  });
+
+  // Hide bar when hero slider is occupying the screen on homepage
+  useEffect(() => {
+    const isHome = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/history' || location.pathname === '/worship' || location.pathname === '/festivals' || location.pathname === '/visit' || location.pathname === '/contact';
+    if (!isHome) {
+      setIsVisible(true);
+      return;
+    }
+
+    const checkSliderOverlap = () => {
+      const sliderEl = document.querySelector('.hero-slider-section') || document.querySelector('.hero-slider');
+      if (sliderEl) {
+        const rect = sliderEl.getBoundingClientRect();
+        // Visible only when slider has scrolled past upper viewport (bottom <= 80px, behind/above sticky header)
+        setIsVisible(rect.bottom <= 80);
+      } else {
+        setIsVisible(true);
+      }
+    };
+
+    checkSliderOverlap();
+    const t1 = setTimeout(checkSliderOverlap, 100);
+    const t2 = setTimeout(checkSliderOverlap, 400);
+
+    window.addEventListener('scroll', checkSliderOverlap, { passive: true });
+    window.addEventListener('resize', checkSliderOverlap, { passive: true });
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('scroll', checkSliderOverlap);
+      window.removeEventListener('resize', checkSliderOverlap);
+    };
+  }, [location.pathname]);
 
   const phone = settings?.contact?.phone || '9503131031';
   const whatsappMsg = encodeURIComponent(
@@ -32,7 +70,7 @@ export default function SocialFloatingBar() {
 
   return (
     <aside
-      className={`social-floating-bar ${collapsed ? 'is-collapsed' : ''}`}
+      className={`social-floating-bar ${collapsed ? 'is-collapsed' : ''} ${isVisible ? 'is-visible' : 'is-hidden'}`}
       aria-label="सोशल मीडिया / Social Links"
     >
       {/* 1. Collapse / Expand Toggle Button */}

@@ -7,6 +7,7 @@ import Bars from '../components/Bars.jsx';
 import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
 import CountUpNumber from '../components/CountUpNumber.jsx';
+import HeroSlider from '../components/HeroSlider.jsx';
 
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Kandhar%2C%20Nanded%2C%20Maharashtra';
 
@@ -173,115 +174,137 @@ export default function Home() {
   const balance = summary?.balance ?? totalReceived - totalSpent;
   const totalContributors = summary?.received?.contributors ?? summary?.received?.count ?? 0;
 
+  // Official temple hero slider banners
+  const heroSlides = [
+    {
+      image: '/banners/banner2.png',
+      alt: isMr
+        ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी - श्रद्धा, भक्ती, सेवा व संस्कृतीचा पवित्र संगम'
+        : 'Shri Kshetra Brahmadev Devasthan, Kallali - Sacred Abode of Faith & Devotion',
+    },
+    {
+      image: '/banners/banner1.png',
+      alt: isMr
+        ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी - भव्य प्रवेशद्वार व मंदिर परिसर'
+        : 'Shri Kshetra Brahmadev Devasthan, Kallali - Temple Sanctum & Premises',
+    },
+  ];
+
   return (
     <>
-      {/* ── 1. HERO BANNER ────────────────────────────────────────── */}
-      <section className="hero" id="home">
-        <div className="wrap">
-          <div className="hero-text" style={{ display: 'grid', gap: '1.1rem', minWidth: 0 }}>
-            <div className="mr-name" lang="mr">
-              {t.hero.deity}
-            </div>
-            <h1 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 2.5rem)', color: 'var(--gold-bright)' }}>
-              {t.hero.title}
-            </h1>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#FAF5EB', opacity: 0.95, fontSize: '0.98rem' }}>
-              <span>📍</span>
-              <strong>{t.hero.location}</strong>
-            </div>
-            <div
-              style={{
-                fontFamily: 'var(--display)',
-                color: 'var(--gold-bright)',
-                fontSize: '1.25rem',
-                letterSpacing: '0.04em',
-              }}
-            >
-              {t.hero.tagline}
-            </div>
-            <p className="lede" style={{ fontSize: '1.05rem', lineHeight: 1.65 }}>
-              {t.hero.intro}
-            </p>
+      {/* ── 1. MAJESTIC EDGE-TO-EDGE HERO SLIDER ────────────────── */}
+      <section className="hero-slider-section" id="home">
+        <HeroSlider
+          slides={heroSlides}
+          autoPlay={true}
+          autoPlayInterval={5000}
+          showArrows={true}
+          showDots={true}
+          pauseOnHover={true}
+        />
+      </section>
 
-            {/* 3 Prominent Hero Action Buttons */}
-            <div className="btns" style={{ marginTop: '0.5rem' }}>
-              <a className="btn light" href="#about">
-                {t.hero.exploreBtn}
-              </a>
-              <Link className="btn primary" to="/yatra">
-                {t.hero.yatraBtn}
-              </Link>
-              <a className="btn light" href="#visit">
-                {t.hero.visitBtn}
-              </a>
+      {/* ── 2. AUSPICIOUS QUICK-ACTION STRIP ─────────────────────── */}
+      <div className="hero-quick-strip" role="navigation" aria-label={isMr ? 'त्वरित दुवे' : 'Quick links'}>
+        <div className="wrap quick-strip-wrap">
+          <a href="#worship" className="quick-pill">
+            <span className="quick-pill-icon" aria-hidden="true">🪔</span>
+            <div className="quick-pill-text">
+              <strong>{isMr ? 'दर्शन व आरती' : 'Darshan & Aarti'}</strong>
+              <small>{isMr ? 'नित्य वेळा व पूजा' : 'Daily Timings'}</small>
             </div>
+          </a>
+          <Link to="/yatra" className="quick-pill">
+            <span className="quick-pill-icon" aria-hidden="true">🚩</span>
+            <div className="quick-pill-text">
+              <strong>{isMr ? 'यात्रा महोत्सव' : 'Yatra Mahotsav'}</strong>
+              <small>{isMr ? 'वार्षिक उत्सव' : 'Annual Festival'}</small>
+            </div>
+          </Link>
+          <Link to="/ledger" className="quick-pill">
+            <span className="quick-pill-icon" aria-hidden="true">📜</span>
+            <div className="quick-pill-text">
+              <strong>{isMr ? 'दान हिशोब वही' : 'Daan Ledger'}</strong>
+              <small>{isMr ? '१००% पारदर्शक' : '100% Transparent'}</small>
+            </div>
+          </Link>
+          <a href="#visit" className="quick-pill">
+            <span className="quick-pill-icon" aria-hidden="true">📍</span>
+            <div className="quick-pill-text">
+              <strong>{isMr ? 'कल्लाळी दर्शन' : 'Visit Kallali'}</strong>
+              <small>{isMr ? 'मार्ग व संपर्क' : 'Route & Guide'}</small>
+            </div>
+          </a>
+        </div>
+      </div>
 
-            {/* Hero Quick Daan Stats */}
-            <div className="hero-stats" aria-live="polite">
-              <div>
-                <strong>
-                  {summary?.received?.total !== undefined ? (
-                    <CountUpNumber value={summary.received.total} prefix="₹" />
-                  ) : (
-                    '—'
-                  )}
-                </strong>
-                <span>{t.hero.daanReceived}</span>
-              </div>
-              <div>
-                <strong>
-                  {summary?.received?.count !== undefined ? (
-                    <CountUpNumber value={summary.received.count} />
-                  ) : (
-                    '—'
-                  )}
-                </strong>
-                <span>{t.hero.offerings}</span>
-              </div>
-              <div>
-                <strong>
-                  {summary?.spent?.total !== undefined ? (
-                    <CountUpNumber value={summary.spent.total} prefix="₹" />
-                  ) : (
-                    '—'
-                  )}
-                </strong>
-                <span>{t.hero.spentOnSeva}</span>
-              </div>
-            </div>
+      {/* ── 3. SACRED TEMPLE INVOCATION & LIVE TRUST STATS ─────────── */}
+      <section className="hero hero-intro">
+        <div className="wrap hero-intro-wrap">
+          <div className="mr-name" lang="mr">
+            {t.hero.deity}
+          </div>
+          <h1 className="hero-intro-title">
+            {t.hero.title}
+          </h1>
+          <div className="hero-intro-location">
+            <span>📍</span>
+            <strong>{t.hero.location}</strong>
+          </div>
+          <div className="hero-intro-tagline">
+            {t.hero.tagline}
+          </div>
+          <p className="hero-intro-lede">
+            {t.hero.intro}
+          </p>
+
+          {/* 3 Prominent Hero Action Buttons */}
+          <div className="btns hero-intro-btns">
+            <a className="btn light" href="#about">
+              {t.hero.exploreBtn}
+            </a>
+            <Link className="btn primary" to="/yatra">
+              {t.hero.yatraBtn}
+            </Link>
+            <a className="btn light" href="#visit">
+              {t.hero.visitBtn}
+            </a>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              padding: '2rem 0',
-            }}
-          >
-            <div
-              className="hero-diya-aura"
-              style={{
-                position: 'absolute',
-                width: '280px',
-                height: '280px',
-                borderRadius: '50%',
-                background:
-                  'radial-gradient(circle, rgba(245,176,65,.25) 0%, rgba(230,126,34,.12) 50%, transparent 75%)',
-                filter: 'blur(12px)',
-                pointerEvents: 'none',
-              }}
-            />
-            <Shrine
-              style={{
-                width: '100%',
-                maxWidth: '260px',
-                filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.35))',
-                position: 'relative',
-                zIndex: 1,
-              }}
-            />
+          {/* Golden Trust Statistics Plaque Bar */}
+          <div className="hero-stats-strip" aria-live="polite">
+            <div className="stat-plaque">
+              <strong>
+                {summary?.received?.total !== undefined ? (
+                  <CountUpNumber value={summary.received.total} prefix="₹" />
+                ) : (
+                  '—'
+                )}
+              </strong>
+              <span>{t.hero.daanReceived}</span>
+            </div>
+            <div className="stat-divider" aria-hidden="true" />
+            <div className="stat-plaque">
+              <strong>
+                {summary?.received?.count !== undefined ? (
+                  <CountUpNumber value={summary.received.count} />
+                ) : (
+                  '—'
+                )}
+              </strong>
+              <span>{t.hero.offerings}</span>
+            </div>
+            <div className="stat-divider" aria-hidden="true" />
+            <div className="stat-plaque">
+              <strong>
+                {summary?.spent?.total !== undefined ? (
+                  <CountUpNumber value={summary.spent.total} prefix="₹" />
+                ) : (
+                  '—'
+                )}
+              </strong>
+              <span>{t.hero.spentOnSeva}</span>
+            </div>
           </div>
         </div>
       </section>
