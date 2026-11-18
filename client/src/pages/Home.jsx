@@ -47,6 +47,11 @@ export default function Home() {
     email: settings?.contact?.email || 'office@shribrahmadevadevasthan.org',
   };
 
+  const youtubeLiveUrl =
+    settings?.social?.youtubeLive ||
+    settings?.social?.youtube ||
+    'https://www.youtube.com/@ShriBrahmadevDevasthanKallali';
+
   // Fetch approved photos and videos for gallery preview
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [galleryVideos, setGalleryVideos] = useState([]);
@@ -309,7 +314,120 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 2. ABOUT PREVIEW ─────────────────────────────────────── */}
+      {/* ── 2. SACRED LIVE DARSHAN & BROADCAST SECTION ──────────── */}
+      <section className="sec sec-live-darshan" id="live-darshan">
+        <div className="wrap">
+          <div className="live-darshan-card reveal-on-scroll">
+            {/* Left Column: Visual Video Preview Card */}
+            <div className="live-preview-box">
+              <img
+                src="/banners/banner2.png"
+                alt={isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान थेट दर्शन' : 'Shri Brahmadev Devasthan Live Darshan'}
+                className="live-preview-img"
+                loading="lazy"
+              />
+              <div className="live-preview-overlay">
+                <div className="live-status-chip">
+                  <span className="live-beacon-pulse">
+                    <span className="beacon-dot-live" />
+                    <span className="beacon-ring-live" />
+                  </span>
+                  <span className="live-chip-text">LIVE ((•))</span>
+                  <span className="live-chip-sub">{isMr ? 'थेट प्रक्षेपण' : 'Live Broadcast'}</span>
+                </div>
+
+                <a
+                  href={youtubeLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="live-play-center-btn"
+                  title={isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}
+                  aria-label="Play Live Darshan on YouTube"
+                >
+                  <div className="live-play-pulse-circle" />
+                  <div className="live-play-icon-box">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </a>
+
+                <div className="live-preview-caption">
+                  <span className="yt-badge">▶ YouTube</span>
+                  <span>{isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी' : 'Shri Brahmadev Devasthan, Kallali'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Live Information & Aarti Programme */}
+            <div className="live-details-box">
+              <div className="live-tag-row">
+                <span className="live-tag-badge">
+                  <span className="live-dot-red" />
+                  {isMr ? 'थेट दर्शन व आरती' : 'Live Darshan & Aarti'}
+                </span>
+                <span className="live-official-badge">
+                  {isMr ? 'अधिकृत चॅनल' : 'Official Channel'}
+                </span>
+              </div>
+
+              <h2 className="live-heading">
+                {isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान थेट दर्शन' : 'Shri Brahmadev Devasthan Live Telecast'}
+              </h2>
+
+              <p className="live-lead">
+                {isMr
+                  ? 'घरबसल्या घ्या कल्लाळी येथील श्री ब्रह्मदेवांचे पावन दर्शन व नित्य आरतीचे थेट प्रक्षेपण. दररोज अधिकृत यूट्यूब चॅनलवर थेट प्रक्षेपणाचा लाभ घ्या.'
+                  : 'Experience the divine presence and sacred daily aartis of Shri Brahmadev live from Kallali on our official YouTube channel.'}
+              </p>
+
+              {/* 3 Live Aarti Timings */}
+              <div className="live-aarti-schedule">
+                <div className="live-sched-item">
+                  <span className="sched-emoji">🌅</span>
+                  <div>
+                    <strong>{isMr ? 'काकड आरती' : 'Morning Aarti'}</strong>
+                    <span>{isMr ? 'सकाळी ६:००' : '6:00 AM'}</span>
+                  </div>
+                </div>
+                <div className="live-sched-item">
+                  <span className="sched-emoji">🌸</span>
+                  <div>
+                    <strong>{isMr ? 'नित्य महापूजा' : 'Daily Mahapooja'}</strong>
+                    <span>{isMr ? 'दुपारी १२:००' : '12:00 PM'}</span>
+                  </div>
+                </div>
+                <div className="live-sched-item">
+                  <span className="sched-emoji">🪔</span>
+                  <div>
+                    <strong>{isMr ? 'संध्या आरती' : 'Evening Aarti'}</strong>
+                    <span>{isMr ? 'संध्याकाळी ७:३०' : '7:30 PM'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Direct YouTube Red CTA Button */}
+              <div className="live-cta-wrap">
+                <a
+                  href={youtubeLiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-youtube-live-cta"
+                  title={isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                  <span>{isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}</span>
+                  <span className="cta-arrow" aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. ABOUT PREVIEW ─────────────────────────────────────── */}
       <section className="sec" id="about">
         <div className="wrap">
           <SectionHead eyebrow={t.about.eyebrow} title={t.about.title} rule />

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
- * HeroSlider - Accessible image carousel for the homepage
- * Supports auto-slide, manual controls, keyboard navigation, and touch swipe
- * Uses CSS transitions for smooth animations
+ * HeroSlider - True Infinite image carousel for the homepage
+ * Supports infinite looping, auto-slide, manual controls, keyboard navigation, and touch swipe.
+ * Slide counter removed per user request.
+ * Includes dedicated Live Darshan YouTube badge.
  */
 export default function HeroSlider({
   slides = [],
@@ -11,62 +12,110 @@ export default function HeroSlider({
   autoPlayInterval = 5000,
   showArrows = true,
   showDots = true,
-  pauseOnHover = true
+  pauseOnHover = true,
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [touchStart, setTouchStart] = useState(null);
-  const autoPlayRef = useRef(null);
-  const sliderRef = useRef(null);
-
-  // Validate slides
-  const validSlides = slides.filter(s => s.image && s.image.trim());
+  const validSlides = slides.filter((s) => s.image && s.image.trim());
   const slideCount = validSlides.length;
 
-  // Auto-play logic
+  // For infinite looping, create clones: [last, ...slides, first]
+  const extendedSlides =
+    slideCount > 1
+      ? [validSlides[slideCount - 1], ...validSlides, validSlides[0]]
+      : validSlides;
+
+  // When slideCount > 1, real first slide is at index 1
+  const [currentIndex, setCurrentIndex] = useState(slideCount > 1 ? 1 : 0);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+
+  const isAnimatingRef = useRef(false);
+  const autoPlayTimerRef = useRef(null);
+  const sliderRef = useRef(null);
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+
+  // Active dot index mapped back to original slide array (0 to slideCount - 1)
+  const activeDotIndex =
+    slideCount <= 1
+      ? 0
+      : currentIndex === 0
+      ? slideCount - 1
+      : currentIndex === extendedSlides.length - 1
+      ? 0
+      : currentIndex - 1;
+
+  // Slide to next (infinite forward)
+  const nextSlide = useCallback(() => {
+    if (slideCount <= 1 || isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+    setTransitionEnabled(true);
+    setCurrentIndex((prev) => prev + 1);
+  }, [slideCount]);
+
+  // Slide to previous (infinite backward)
+  const prevSlide = useCallback(() => {
+    if (slideCount <= 1 || isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+    setTransitionEnabled(true);
+    setCurrentIndex((prev) => prev - 1);
+  }, [slideCount]);
+
+  // Jump to specific slide from dots
+  const goToSlide = useCallback(
+    (index) => {
+      if (slideCount <= 1 || isAnimatingRef.current) return;
+      isAnimatingRef.current = true;
+      setTransitionEnabled(true);
+      setCurrentIndex(index + 1);
+    },
+    [slideCount]
+  );
+
+  // Handle transition end for seamless infinite wrap
+  const handleTransitionEnd = useCallback(() => {
+    isAnimatingRef.current = false;
+    if (slideCount <= 1) return;
+
+    // Reached clone of first slide at the end -> jump silently to real first slide
+    if (currentIndexRef.current === extendedSlides.length - 1) {
+      setTransitionEnabled(false);
+      setCurrentIndex(1);
+    }
+    // Reached clone of last slide at the start -> jump silently to real last slide
+    else if (currentIndexRef.current === 0) {
+      setTransitionEnabled(false);
+      setCurrentIndex(extendedSlides.length - 2);
+    }
+  }, [slideCount, extendedSlides.length]);
+
+  // Re-enable transition on the next frame after silent jump
   useEffect(() => {
-    if (!autoPlay || slideCount <= 1) return;
+    if (!transitionEnabled) {
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTransitionEnabled(true);
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [transitionEnabled]);
 
-    const startAutoPlay = () => {
-      autoPlayRef.current = setInterval(() => {
-        nextSlide();
-      }, autoPlayInterval);
-    };
-
-    const stopAutoPlay = () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current);
-        autoPlayRef.current = null;
-      }
-    };
-
-    startAutoPlay();
-
-    // Pause on hover
-    if (pauseOnHover) {
-      const slider = sliderRef.current;
-      if (slider) {
-        slider.addEventListener('mouseenter', stopAutoPlay);
-        slider.addEventListener('mouseleave', startAutoPlay);
-      }
+  // Autoplay management
+  useEffect(() => {
+    if (!autoPlay || slideCount <= 1 || isPaused) {
+      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+      return;
     }
 
-    // Pause when tab is hidden
-    const handleVisibilityChange = () => {
-      if (document.hidden) stopAutoPlay();
-      else startAutoPlay();
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    autoPlayTimerRef.current = setInterval(() => {
+      nextSlide();
+    }, autoPlayInterval);
 
     return () => {
-      stopAutoPlay();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (sliderRef.current) {
-        sliderRef.current.removeEventListener('mouseenter', stopAutoPlay);
-        sliderRef.current.removeEventListener('mouseleave', startAutoPlay);
-      }
+      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
     };
-  }, [autoPlay, autoPlayInterval, slideCount, pauseOnHover]);
+  }, [autoPlay, autoPlayInterval, slideCount, isPaused, nextSlide]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -80,35 +129,11 @@ export default function HeroSlider({
       }
     }
     const slider = sliderRef.current;
-    if (slider) {
-      slider.addEventListener('keydown', handleKeyDown);
-    }
+    if (slider) slider.addEventListener('keydown', handleKeyDown);
     return () => {
       if (slider) slider.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex]);
-
-  function nextSlide() {
-    if (isAnimating || slideCount <= 1) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev + 1) % slideCount);
-    // Reset animation flag after transition
-    setTimeout(() => setIsAnimating(false), 500);
-  }
-
-  function prevSlide() {
-    if (isAnimating || slideCount <= 1) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev - 1 + slideCount) % slideCount);
-    setTimeout(() => setIsAnimating(false), 500);
-  }
-
-  function goToSlide(index) {
-    if (isAnimating || index === currentIndex) return;
-    setIsAnimating(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsAnimating(false), 500);
-  }
+  }, [prevSlide, nextSlide]);
 
   // Touch swipe handling
   function handleTouchStart(e) {
@@ -119,7 +144,7 @@ export default function HeroSlider({
     if (touchStart === null) return;
     const touchEnd = e.touches[0].clientX;
     const diff = touchStart - touchEnd;
-    if (Math.abs(diff) > 50) { // Minimum swipe distance
+    if (Math.abs(diff) > 45) {
       if (diff > 0) nextSlide();
       else prevSlide();
       setTouchStart(null);
@@ -130,9 +155,6 @@ export default function HeroSlider({
     setTouchStart(null);
   }
 
-  const currentSlide = validSlides[currentIndex];
-
-  // Safe to return early here — all hooks have already been called above
   if (slideCount === 0) {
     return (
       <div className="hero-slider" role="region" aria-label="Temple gallery">
@@ -157,17 +179,24 @@ export default function HeroSlider({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => pauseOnHover && setIsPaused(true)}
+      onMouseLeave={() => pauseOnHover && setIsPaused(false)}
       tabIndex="0"
     >
+      {/* ── Sliding Track ── */}
       <div
         className="hero-slider-track"
+        onTransitionEnd={handleTransitionEnd}
         style={{
           transform: `translateX(-${currentIndex * 100}%)`,
+          transition: transitionEnabled
+            ? 'transform 600ms cubic-bezier(.25,.46,.45,.94)'
+            : 'none',
           display: 'flex',
           width: '100%',
         }}
       >
-        {validSlides.map((slide, index) => (
+        {extendedSlides.map((slide, index) => (
           <div
             key={index}
             className="hero-slider-slide"
@@ -180,8 +209,9 @@ export default function HeroSlider({
             <img
               src={slide.image}
               alt={slide.alt || `Temple view ${index + 1}`}
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading={index <= 1 ? 'eager' : 'lazy'}
               className="hero-slider-image"
+              decoding="async"
             />
             {(slide.caption || slide.title) && (
               <div className="hero-slider-caption">
@@ -193,48 +223,42 @@ export default function HeroSlider({
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* ── Navigation Arrows ── */}
       {showArrows && slideCount > 1 && (
         <>
           <button
+            type="button"
             className="hero-slider-arrow hero-slider-prev"
             onClick={prevSlide}
             aria-label="Previous slide"
-            disabled={isAnimating}
           >
             ‹
           </button>
           <button
+            type="button"
             className="hero-slider-arrow hero-slider-next"
             onClick={nextSlide}
             aria-label="Next slide"
-            disabled={isAnimating}
           >
             ›
           </button>
         </>
       )}
 
-      {/* Dot Indicators */}
+      {/* ── Dot Indicators (Slide counter removed per request) ── */}
       {showDots && slideCount > 1 && (
         <div className="hero-slider-dots" role="tablist" aria-label="Slide navigation">
           {validSlides.map((_, index) => (
             <button
               key={index}
-              className={`hero-slider-dot${index === currentIndex ? ' active' : ''}`}
+              type="button"
+              className={`hero-slider-dot${index === activeDotIndex ? ' active' : ''}`}
               onClick={() => goToSlide(index)}
               role="tab"
-              aria-selected={index === currentIndex}
+              aria-selected={index === activeDotIndex}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-        </div>
-      )}
-
-      {/* Slide Counter */}
-      {slideCount > 1 && (
-        <div className="hero-slider-counter" aria-live="polite">
-          <span className="current">{currentIndex + 1}</span> / <span className="total">{slideCount}</span>
         </div>
       )}
     </div>
