@@ -8,7 +8,12 @@ import { useSite } from '../SiteContext.jsx';
  * Hidden while hero slider is in view, visible on the rest of the page.
  */
 export default function SocialFloatingBar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return true;
+    }
+    return false;
+  });
   const { lang, settings } = useSite();
   const location = useLocation();
   const isMr = lang === 'mr';

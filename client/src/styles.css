@@ -293,7 +293,7 @@ a{color:var(--cta)}
   font-size:.75rem;
 }
 
-/* Big Central Glowing Play Button */
+/* Central YouTube Play Button */
 .live-play-center-btn{
   position:absolute;
   top:50%;
@@ -302,60 +302,52 @@ a{color:var(--cta)}
   display:flex;
   align-items:center;
   justify-content:center;
-  text-decoration:none;
-  cursor:pointer;
-  pointer-events:auto;
-  outline:none;
+  pointer-events:none;
 }
 .live-play-pulse-circle{
   position:absolute;
-  width:76px;
-  height:76px;
+  width:80px;
+  height:80px;
   border-radius:50%;
-  background:rgba(229,9,20,.45);
-  animation:playPulseRing 2s infinite ease-out;
+  background:rgba(229,9,20,.4);
+  animation:playPulseRing 2.2s infinite ease-out;
 }
 @keyframes playPulseRing{
   0%{transform:scale(.7);opacity:.95}
   100%{transform:scale(1.6);opacity:0}
 }
-.live-play-icon-box{
+.youtube-play-icon-box{
   position:relative;
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  background:#FF0000;
-  color:#fff;
   display:grid;
   place-items:center;
-  box-shadow:0 6px 20px rgba(0,0,0,.5), 0 0 0 3px rgba(255,255,255,.95);
-  transition:transform .22s cubic-bezier(.16,1,.3,1), background .2s, box-shadow .2s;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.6));
+  transition:transform .22s cubic-bezier(.16,1,.3,1), filter .2s;
 }
-.live-play-icon-box svg{
-  transform:translateX(2px);
+.youtube-play-icon-box svg{
+  width:64px;
+  height:44px;
 }
-.live-play-center-btn:hover .live-play-icon-box,
-.live-play-center-btn:focus-visible .live-play-icon-box{
+.live-preview-box:hover .youtube-play-icon-box{
   transform:scale(1.12);
-  background:#cc0000;
-  box-shadow:0 8px 28px rgba(229,9,20,.85), 0 0 0 3.5px #fff;
+  filter:drop-shadow(0 8px 24px rgba(229,9,20,.85));
 }
-.live-preview-caption{
+.live-preview-bottom-bar{
   display:flex;
   align-items:center;
-  gap:8px;
-  color:#FAF5EB;
-  font-size:.84rem;
-  font-weight:600;
-  text-shadow:0 2px 6px rgba(0,0,0,.9);
+  justify-content:space-between;
+  padding:4px 10px;
+  background:rgba(15,5,3,.75);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border-radius:6px;
+  border:1px solid rgba(245,176,65,.3);
+  width:fit-content;
 }
-.yt-badge{
-  background:#FF0000;
-  color:#fff;
-  padding:2px 7px;
-  border-radius:4px;
-  font-weight:800;
-  font-size:.74rem;
+.live-stream-label{
+  color:#FAF5EB;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.02em;
 }
 
 /* Right: Details & Schedule */
@@ -491,8 +483,8 @@ a{color:var(--cta)}
 @media (max-width:980px){
   .live-darshan-card{
     grid-template-columns:1fr;
-    padding:1.8rem 1.5rem;
-    gap:1.6rem;
+    padding:1.8rem 1.4rem;
+    gap:1.5rem;
   }
   .live-aarti-schedule{
     grid-template-columns:1fr;
@@ -503,12 +495,54 @@ a{color:var(--cta)}
     justify-content:center;
   }
 }
-@media (max-width:480px){
-  .sec-live-darshan{padding-block:2rem}
-  .live-darshan-card{padding:1.25rem}
-  .live-play-icon-box{width:52px;height:52px}
-  .live-play-icon-box svg{width:26px;height:26px}
-  .btn-youtube-live-cta{font-size:.95rem;padding:.75rem 1.25rem}
+@media (max-width:600px){
+  .sec-live-darshan{padding-block:1.75rem}
+  .live-darshan-card{
+    padding:1.25rem 1rem;
+    border-radius:18px;
+    gap:1.25rem;
+  }
+  .live-details-box{
+    padding-inline:2px;
+    gap:.75rem;
+  }
+  .live-heading{
+    font-size:1.35rem;
+  }
+  .live-lead{
+    font-size:.88rem;
+    line-height:1.55;
+  }
+  .live-aarti-schedule{
+    grid-template-columns:1fr;
+    gap:.45rem;
+    padding:.65rem .85rem;
+  }
+  .live-sched-item{
+    gap:.55rem;
+  }
+  .live-sched-item strong{
+    font-size:.82rem;
+  }
+  .live-sched-item span{
+    font-size:.76rem;
+  }
+  .youtube-play-icon-box svg{
+    width:50px;
+    height:34px;
+  }
+  .live-status-chip{
+    padding:3px 9px;
+    font-size:.74rem;
+  }
+  .btn-youtube-live-cta{
+    font-size:.92rem;
+    padding:.75rem 1.15rem;
+  }
+  .btn-youtube-live-cta svg{
+    width:20px;
+    height:20px;
+  }
 }
 
 /* Auspicious Quick Action Strip directly below slider */
@@ -1254,12 +1288,25 @@ tr.voided td{opacity:.55;text-decoration:line-through}
 .badge-label{white-space:nowrap;font-weight:700;line-height:1}
 
 @media (max-width:600px){
-  .quick-action-badges{top:50%;gap:8px}
+  .quick-action-badges{top:50%;gap:6px}
   .quick-action-badges.is-hidden{transform:translateY(-50%) translateX(-120%)}
   .quick-action-badges.is-visible{transform:translateY(-50%) translateX(0)}
-  .quick-badge-btn{padding:7px 10px 7px 7px;font-size:.78rem;gap:5px}
-  .badge-icon-box{width:22px;height:22px}
-  .badge-icon-box svg{width:18px;height:18px}
+  .quick-badge-btn{
+    padding:8px 9px 8px 7px;
+    border-radius:0 10px 10px 0;
+    gap:0;
+  }
+  .badge-label{
+    display:none; /* Crucial: hides text label on mobile so it never covers content */
+  }
+  .badge-icon-box{
+    width:22px;
+    height:22px;
+  }
+  .badge-icon-box svg{
+    width:19px;
+    height:19px;
+  }
 }
 
 /* ── Darshan & Aarti Schedule Modal ────────────────────── */

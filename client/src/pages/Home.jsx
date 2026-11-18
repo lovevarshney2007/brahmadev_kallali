@@ -318,8 +318,15 @@ export default function Home() {
       <section className="sec sec-live-darshan" id="live-darshan">
         <div className="wrap">
           <div className="live-darshan-card reveal-on-scroll">
-            {/* Left Column: Visual Video Preview Card */}
-            <div className="live-preview-box">
+            {/* Left Column: Visual Video Preview Card (Clickable to YouTube) */}
+            <a
+              href={youtubeLiveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="live-preview-box"
+              title={isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}
+              aria-label={isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}
+            >
               <img
                 src="/banners/banner2.png"
                 alt={isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान थेट दर्शन' : 'Shri Brahmadev Devasthan Live Darshan'}
@@ -333,31 +340,28 @@ export default function Home() {
                     <span className="beacon-ring-live" />
                   </span>
                   <span className="live-chip-text">LIVE ((•))</span>
-                  <span className="live-chip-sub">{isMr ? 'थेट प्रक्षेपण' : 'Live Broadcast'}</span>
                 </div>
 
-                <a
-                  href={youtubeLiveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="live-play-center-btn"
-                  title={isMr ? 'यूट्यूबवर थेट दर्शन पहा' : 'Watch Live on YouTube'}
-                  aria-label="Play Live Darshan on YouTube"
-                >
+                <div className="live-play-center-btn" aria-hidden="true">
                   <div className="live-play-pulse-circle" />
-                  <div className="live-play-icon-box">
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
+                  <div className="youtube-play-icon-box">
+                    <svg width="44" height="44" viewBox="0 0 68 48">
+                      <path
+                        d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z"
+                        fill="#FF0000"
+                      />
+                      <path d="M45 24L27 14v20z" fill="#FFFFFF" />
                     </svg>
                   </div>
-                </a>
+                </div>
 
-                <div className="live-preview-caption">
-                  <span className="yt-badge">▶ YouTube</span>
-                  <span>{isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी' : 'Shri Brahmadev Devasthan, Kallali'}</span>
+                <div className="live-preview-bottom-bar">
+                  <span className="live-stream-label">
+                    {isMr ? 'अधिकृत थेट प्रक्षेपण • YouTube Live' : 'Official Live Stream • YouTube Live'}
+                  </span>
                 </div>
               </div>
-            </div>
+            </a>
 
             {/* Right Column: Live Information & Aarti Programme */}
             <div className="live-details-box">
