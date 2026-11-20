@@ -19,7 +19,7 @@ export function computeHash(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
-// --- IMAGE UPLOAD (5 MB max) ---
+// --- IMAGE UPLOAD (10 MB max) ---
 
 export const uploadMiddleware = multer({
   storage: multer.memoryStorage(),
@@ -31,7 +31,7 @@ export const uploadMiddleware = multer({
       cb(new Error('Only JPEG, PNG, WEBP and GIF image files are allowed.'));
     }
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
 /**
@@ -50,12 +50,18 @@ export async function uploadBuffer(buffer, mimetype) {
       {
         folder: 'brahmadev_gallery',
         resource_type: 'image',
+        timeout: 180000,
         transformation: [
           { width: 1600, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' },
         ],
       },
       (error, result) => {
-        if (error) return reject(error);
+        if (error) {
+          if (error.name === 'TimeoutError' || error.http_code === 499) {
+            return reject(new Error('Cloudinary upload timed out. Please try again with a compressed or smaller image.'));
+          }
+          return reject(error);
+        }
         resolve({ imageUrl: result.secure_url, publicId: result.public_id });
       }
     );

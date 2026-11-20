@@ -123,7 +123,14 @@ export function createApp() {
       return res.status(400).json({ error: err.message });
     }
 
-    // 5. Catch-all: only 5xx errors get logged and return the generic message
+    // 5. Cloudinary / Network Timeout error
+    if (err.name === 'TimeoutError' || err.http_code === 499 || err.message?.includes('timed out')) {
+      return res.status(408).json({
+        error: 'Image upload timed out due to slow network. Please try again with a compressed or smaller image.'
+      });
+    }
+
+    // 6. Catch-all: only 5xx errors get logged and return the generic message
     const status = (typeof err.status === 'number' && err.status >= 400 && err.status < 600)
       ? err.status
       : (typeof err.statusCode === 'number' && err.statusCode >= 400 && err.statusCode < 600)

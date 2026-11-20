@@ -10,7 +10,7 @@ import { donationInput, expenseInput, settingsInput, ValidationError } from '../
 import { ledgerSummary, pageParams, invalidateLedgerCache } from '../services/ledger.js';
 import { Photo } from '../models/Photo.js';
 import { Enquiry } from '../models/Enquiry.js';
-import { deleteFromCloudinary } from '../middleware/upload.js';
+import { deleteFromCloudinary, uploadMiddleware, uploadBuffer } from '../middleware/upload.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -158,6 +158,100 @@ router.put('/settings', ah(async (req, res) => {
   s.set(settingsInput(req.body));
   await s.save();
   res.json(s);
+}));
+
+// ---- Hero Slider management ----
+
+// Upload a new slide image
+router.post('/slider/upload', uploadMiddleware.single('image'), ah(async (req, res) => {
+  if (!req.file) throw new ValidationError('Please select an image file to upload.');
+  const { imageUrl, publicId } = await uploadBuffer(req.file.buffer, req.file.mimetype);
+  const alt = String(req.body.alt || '').trim().slice(0, 300);
+  const title = String(req.body.title || '').trim().slice(0, 200);
+  const caption = String(req.body.caption || '').trim().slice(0, 500);
+  const s = await getSettings();
+  const order = (s.heroSlides || []).length;
+  s.heroSlides = [...(s.heroSlides || []), { imageUrl, publicId, alt, title, caption, order }];
+  await s.save();
+  res.status(201).json({ imageUrl, publicId, alt, title, caption, order, slides: s.heroSlides });
+}));
+
+// Delete a slide by index
+router.delete('/slider/:index', ah(async (req, res) => {
+  const idx = parseInt(req.params.index, 10);
+  const s = await getSettings();
+  const slides = [...(s.heroSlides || [])];
+  if (isNaN(idx) || idx < 0 || idx >= slides.length) {
+    return res.status(404).json({ error: 'Slide not found.' });
+  }
+  const removed = slides.splice(idx, 1)[0];
+  if (removed?.publicId) {
+    await deleteFromCloudinary(removed.publicId, 'image');
+  }
+  s.heroSlides = slides.map((sl, i) => ({ ...sl, order: i }));
+  await s.save();
+  res.json({ message: 'Slide deleted.', slides: s.heroSlides });
+}));
+
+// Update a single slide (supports replacing image and/or editing title, alt, caption)
+router.put('/slider/:index', uploadMiddleware.single('image'), ah(async (req, res) => {
+  const idx = parseInt(req.params.index, 10);
+  const s = await getSettings();
+  const slides = [...(s.heroSlides || [])];
+  if (isNaN(idx) || idx < 0 || idx >= slides.length) {
+    return res.status(404).json({ error: 'Slide not found.' });
+  }
+
+  const current = slides[idx];
+  let imageUrl = current.imageUrl;
+  let publicId = current.publicId || '';
+
+  // If a new image was uploaded to replace the current one
+  if (req.file) {
+    const uploaded = await uploadBuffer(req.file.buffer, req.file.mimetype);
+    // Delete previous Cloudinary image if it exists
+    if (current.publicId) {
+      await deleteFromCloudinary(current.publicId, 'image').catch(() => {});
+    }
+    imageUrl = uploaded.imageUrl;
+    publicId = uploaded.publicId;
+  }
+
+  const alt = req.body.alt !== undefined ? String(req.body.alt).trim().slice(0, 300) : current.alt;
+  const title = req.body.title !== undefined ? String(req.body.title).trim().slice(0, 200) : current.title;
+  const caption = req.body.caption !== undefined ? String(req.body.caption).trim().slice(0, 500) : current.caption;
+
+  slides[idx] = {
+    imageUrl,
+    publicId,
+    alt,
+    title,
+    caption,
+    order: idx,
+  };
+
+  s.heroSlides = slides;
+  await s.save();
+  res.json({ slide: slides[idx], slides: s.heroSlides });
+}));
+
+// Update slides order & metadata (PUT array of slides — no image re-upload)
+router.put('/slider/reorder', ah(async (req, res) => {
+  const s = await getSettings();
+  const incoming = Array.isArray(req.body.slides) ? req.body.slides : [];
+  // Validate each slide has an imageUrl that matches existing slides
+  const existing = (s.heroSlides || []).map(sl => sl.imageUrl);
+  const validated = incoming.filter(sl => sl.imageUrl && existing.includes(sl.imageUrl));
+  s.heroSlides = validated.map((sl, i) => ({
+    imageUrl: sl.imageUrl,
+    publicId: sl.publicId || '',
+    alt: String(sl.alt || '').trim().slice(0, 300),
+    title: String(sl.title || '').trim().slice(0, 200),
+    caption: String(sl.caption || '').trim().slice(0, 500),
+    order: i,
+  }));
+  await s.save();
+  res.json({ slides: s.heroSlides });
 }));
 
 // ---- CSV export for the trust's accountant ----

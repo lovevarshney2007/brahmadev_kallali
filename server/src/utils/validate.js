@@ -92,6 +92,14 @@ const settingsZod = z.object({
     when: z.string().trim().max(60),
     details: z.string().trim().max(300),
   })).optional(),
+  heroSlides: z.array(z.object({
+    imageUrl: z.string().trim().url('Invalid image URL.').max(2000),
+    publicId: z.string().trim().max(500).default(''),
+    alt: z.string().trim().max(300).default(''),
+    title: z.string().trim().max(200).default(''),
+    caption: z.string().trim().max(500).default(''),
+    order: z.coerce.number().int().min(0).default(0),
+  })).optional(),
 });
 
 export function settingsInput(body) {

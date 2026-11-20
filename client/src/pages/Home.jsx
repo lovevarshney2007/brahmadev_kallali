@@ -179,8 +179,8 @@ export default function Home() {
   const balance = summary?.balance ?? totalReceived - totalSpent;
   const totalContributors = summary?.received?.contributors ?? summary?.received?.count ?? 0;
 
-  // Official temple hero slider banners
-  const heroSlides = [
+  // Official temple hero slider banners — from admin settings, fallback to static banners
+  const staticHeroSlides = [
     {
       image: '/banners/banner2.png',
       alt: isMr
@@ -194,6 +194,15 @@ export default function Home() {
         : 'Shri Kshetra Brahmadev Devasthan, Kallali - Temple Sanctum & Premises',
     },
   ];
+
+  // If admin has uploaded slides, use those; otherwise use static banners
+  const adminSlides = settings?.heroSlides;
+  const heroSlides =
+    adminSlides && adminSlides.length > 0
+      ? adminSlides
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((s) => ({ image: s.imageUrl, alt: s.alt || '', title: s.title || '', caption: s.caption || '' }))
+      : staticHeroSlides;
 
   return (
     <>

@@ -32,6 +32,13 @@ router.get('/settings', ah(async (_req, res) => {
     contact: s.contact,
     announcement: s.announcement,
     purposes: PURPOSES,
+    heroSlides: (s.heroSlides || []).map(sl => ({
+      imageUrl: sl.imageUrl,
+      alt: sl.alt || '',
+      title: sl.title || '',
+      caption: sl.caption || '',
+      order: sl.order ?? 0,
+    })),
   });
 }));
 
