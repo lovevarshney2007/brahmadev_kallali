@@ -133,6 +133,9 @@ function ScrollManager() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
+
   return (
     <SiteProvider>
       <ScrollManager />
@@ -162,10 +165,10 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <Footer />
-      <QuickActionBadges />
-      <SocialFloatingBar />
+      {!isAdmin && <QuickActionBadges />}
+      {!isAdmin && <SocialFloatingBar />}
       <ScrollToTop />
-      <FloatingDiya />
+      {!isAdmin && <FloatingDiya />}
     </SiteProvider>
   );
 }

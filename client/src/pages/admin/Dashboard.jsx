@@ -12,11 +12,11 @@ function Status({ s }) {
 
 function ConfirmDeleteButton({ onConfirm, isMr = false }) {
   const [asking, setAsking] = useState(false);
-  if (!asking) return <button className="btn small danger" onClick={() => setAsking(true)}>{isMr ? 'काढा' : 'Delete'}</button>;
+  if (!asking) return <button type="button" className="btn small danger" onClick={() => setAsking(true)} style={{ width: '100%' }}>{isMr ? 'काढा' : 'Delete'}</button>;
   return (
-    <span style={{ display: 'inline-flex', gap: '.3rem', alignItems: 'center' }}>
-      <button className="btn small danger" onClick={() => { setAsking(false); onConfirm(); }}>{isMr ? 'खात्री करा' : 'Confirm Delete'}</button>
-      <button className="btn small" onClick={() => setAsking(false)}>{isMr ? 'रद्द' : 'Cancel'}</button>
+    <span style={{ display: 'flex', gap: '.25rem', alignItems: 'center', width: '100%' }}>
+      <button type="button" className="btn small danger" onClick={() => { setAsking(false); onConfirm(); }} style={{ flex: 1, padding: '.35rem .25rem', fontSize: '.8rem' }}>{isMr ? 'खात्री करा' : 'Confirm'}</button>
+      <button type="button" className="btn small" onClick={() => setAsking(false)} style={{ flex: 1, padding: '.35rem .25rem', fontSize: '.8rem' }}>{isMr ? 'रद्द' : 'Cancel'}</button>
     </span>
   );
 }
@@ -878,23 +878,23 @@ function HeroSliderManager() {
                 </div>
 
                 {/* Content Details */}
-                <div style={{ minWidth: 0, display: 'grid', gap: '.35rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap' }}>
-                    <strong style={{ fontSize: '1.05rem', color: 'var(--heading)' }}>
+                <div className="slider-item-content">
+                  <div>
+                    <strong>
                       {slide.title || (isMr ? `स्लायडर क्रमांक ${idx + 1}` : `Slide #${idx + 1}`)}
                     </strong>
                   </div>
                   {slide.caption ? (
-                    <p style={{ margin: 0, fontSize: '.92rem', color: 'var(--fg)', lineHeight: 1.45 }}>
+                    <p>
                       {slide.caption}
                     </p>
                   ) : (
                     <span className="muted small">{isMr ? 'वर्णन जोडलेले नाही' : 'No caption provided'}</span>
                   )}
                   {slide.alt && (
-                    <div style={{ marginTop: '.2rem' }}>
-                      <span className="chip" style={{ fontSize: '.72rem' }}>
-                        Alt: {slide.alt}
+                    <div style={{ marginTop: '.25rem' }}>
+                      <span className="slider-alt-pill">
+                        <strong>Alt:</strong> {slide.alt}
                       </span>
                     </div>
                   )}
@@ -902,27 +902,28 @@ function HeroSliderManager() {
 
                 {/* Responsive Actions */}
                 <div className="slider-actions-row">
-                  <div style={{ display: 'flex', gap: '.3rem', width: '100%' }}>
+                  <div className="slider-reorder-pair">
                     <button
+                      type="button"
                       className="btn small"
                       title={isMr ? 'वर हलवा' : 'Move up'}
                       onClick={() => moveSlide(idx, -1)}
                       disabled={idx === 0}
-                      style={{ padding: '.35rem .6rem', fontWeight: 800, flex: 1 }}
                     >
                       ↑
                     </button>
                     <button
+                      type="button"
                       className="btn small"
                       title={isMr ? 'खाली हलवा' : 'Move down'}
                       onClick={() => moveSlide(idx, 1)}
                       disabled={idx === slides.length - 1}
-                      style={{ padding: '.35rem .6rem', fontWeight: 800, flex: 1 }}
                     >
                       ↓
                     </button>
                   </div>
                   <button
+                    type="button"
                     className="btn small"
                     onClick={() => openSlidePreview(idx)}
                     title={isMr ? 'पूर्वावलोकन' : 'Preview'}
@@ -930,6 +931,7 @@ function HeroSliderManager() {
                     👁️ {isMr ? 'पूर्वावलोकन' : 'Preview'}
                   </button>
                   <button
+                    type="button"
                     className="btn small"
                     onClick={() => handleOpenEdit(idx)}
                     title={isMr ? 'संपादन' : 'Edit'}
