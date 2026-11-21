@@ -158,11 +158,13 @@ export default function HeroSlider({
   if (slideCount === 0) {
     return (
       <div className="hero-slider" role="region" aria-label="Temple gallery">
-        <div className="hero-slider-track">
-          <div className="hero-slider-slide">
-            <div className="hero-slider-placeholder">
-              <span className="hero-slider-icon">🕉️</span>
-              <p>Shri Kshetra Brahmadev Devasthan</p>
+        <div className="hero-slider-slider-wrapper">
+          <div className="hero-slider-track">
+            <div className="hero-slider-slide">
+              <div className="hero-slider-placeholder">
+                <span className="hero-slider-icon">🕉️</span>
+                <p>Shri Kshetra Brahmadev Devasthan</p>
+              </div>
             </div>
           </div>
         </div>
@@ -183,44 +185,45 @@ export default function HeroSlider({
       onMouseLeave={() => pauseOnHover && setIsPaused(false)}
       tabIndex="0"
     >
-      {/* ── Sliding Track ── */}
-      <div
-        className="hero-slider-track"
-        onTransitionEnd={handleTransitionEnd}
-        style={{
-          transform: `translateX(-${currentIndex * 100}%)`,
-          transition: transitionEnabled
-            ? 'transform 600ms cubic-bezier(.25,.46,.45,.94)'
-            : 'none',
-          display: 'flex',
-          width: '100%',
-        }}
-      >
-        {extendedSlides.map((slide, index) => (
-          <div
-            key={index}
-            className="hero-slider-slide"
-            style={{
-              flex: '0 0 100%',
-              minWidth: '100%',
-              width: '100%',
-            }}
-          >
-            <img
-              src={slide.image}
-              alt={slide.alt || `Temple view ${index + 1}`}
-              loading={index <= 1 ? 'eager' : 'lazy'}
-              className="hero-slider-image"
-              decoding="async"
-            />
-            {(slide.caption || slide.title) && (
-              <div className="hero-slider-caption">
-                {slide.title && <h3 className="hero-slider-title">{slide.title}</h3>}
-                {slide.caption && <p className="hero-slider-desc">{slide.caption}</p>}
-              </div>
-            )}
-          </div>
-        ))}
+      {/* Wrapper for flex column layout */}
+      <div className="hero-slider-slider-wrapper">
+        {/* ── Sliding Track ── */}
+        <div
+          className="hero-slider-track"
+          onTransitionEnd={handleTransitionEnd}
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: transitionEnabled
+              ? 'transform 600ms cubic-bezier(.25,.46,.45,.94)'
+              : 'none',
+          }}
+        >
+          {extendedSlides.map((slide, index) => (
+            <div
+              key={index}
+              className="hero-slider-slide"
+              style={{
+                flex: '0 0 100%',
+                minWidth: '100%',
+                width: '100%',
+              }}
+            >
+              <img
+                src={slide.image}
+                alt={slide.alt || `Temple view ${index + 1}`}
+                loading={index <= 1 ? 'eager' : 'lazy'}
+                className="hero-slider-image"
+                decoding="async"
+              />
+              {(slide.caption || slide.title) && (
+                <div className="hero-slider-caption">
+                  {slide.title && <h3 className="hero-slider-title">{slide.title}</h3>}
+                  {slide.caption && <p className="hero-slider-desc">{slide.caption}</p>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Navigation Arrows ── */}
