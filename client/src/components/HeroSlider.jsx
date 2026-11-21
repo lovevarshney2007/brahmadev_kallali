@@ -185,7 +185,6 @@ export default function HeroSlider({
       onMouseLeave={() => pauseOnHover && setIsPaused(false)}
       tabIndex="0"
     >
-      {/* Wrapper for flex column layout */}
       <div className="hero-slider-slider-wrapper">
         {/* ── Sliding Track ── */}
         <div
