@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { ah } from '../utils/asyncHandler.js';
-import { Admin } from '../models/Admin.js';
+import { Admin, PASSWORD_COMPLEXITY } from '../models/Admin.js';
 import { COOKIE_NAME, cookieOptions, requireAdmin, signToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -40,8 +40,9 @@ router.post('/change-password', requireAdmin, ah(async (req, res) => {
   if (!(await admin.checkPassword(String(currentPassword || '')))) {
     return res.status(400).json({ error: 'Current password is incorrect.' });
   }
-  if (String(newPassword || '').length < 10) {
-    return res.status(400).json({ error: 'New password must be at least 10 characters.' });
+  // Enforce strong password: 12+ chars, uppercase, lowercase, number, special char
+  if (!PASSWORD_COMPLEXITY.test(String(newPassword || ''))) {
+    return res.status(400).json({ error: 'New password must be at least 12 characters long and contain uppercase, lowercase, a number, and a special character (@$!%*?&._-).' });
   }
   admin.passwordHash = await Admin.hashPassword(newPassword);
   await admin.save();

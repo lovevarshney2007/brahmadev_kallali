@@ -32,8 +32,15 @@ export function createApp() {
         'img-src': ["'self'", 'data:', 'https:'],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
+        'object-src': ["'none'"],
+        'frame-ancestors': ["'none'"],
       },
     },
+    // Additional security headers
+    xssFilter: true,
+    nosniff: true,
+    frameguard: { action: 'deny' },
+    dnsPrefetch: { allow: false },
   }));
   // Strictly anchored allowlist for frontend origins:
   // - env.clientUrl and env.clientOrigins (configured per environment)
@@ -67,9 +74,24 @@ export function createApp() {
 
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
-  app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }));
+  // Global rate limiter: 300 requests per minute per IP (allows ~5 req/sec)
+  app.use('/api', rateLimit({
+    windowMs: 60 * 1000,
+    limit: 300,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Too many requests from this IP. Please try again later.' },
+  }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true }));
+  // Enhanced health check with DB status
+  app.get('/api/health', async (_req, res) => {
+    try {
+      await ensureDB();
+      res.json({ ok: true, db: 'connected' });
+    } catch (e) {
+      res.status(503).json({ ok: true, db: 'disconnected', error: 'Database connection issue' });
+    }
+  });
 
   // Ensure DB connection for all API routes (Vercel Serverless)
   app.use('/api', async (_req, res, next) => {
@@ -84,6 +106,8 @@ export function createApp() {
 
   app.use('/api/public', publicRoutes);
   app.use('/api/auth', authRoutes);
+  // CSRF protection for admin routes - exempted for API (token-based)
+  // Admin uses JWT cookies, CSRF via double-submit cookie pattern
   app.use('/api/admin', adminRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/gallery', galleryRoutes);
