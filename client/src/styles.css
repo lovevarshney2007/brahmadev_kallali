@@ -162,12 +162,6 @@ a{color:var(--cta)}
   width:100%;
   will-change:transform;
 }
-.hero-slider-track{
-  display:flex;
-  transition:transform 600ms cubic-bezier(.25,.46,.45,.94);
-  height:100%;
-  will-change:transform;
-}
 .hero-slider-slide{
   flex:0 0 100%;
   min-width:100%;
