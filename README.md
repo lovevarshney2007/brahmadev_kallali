@@ -1,6 +1,6 @@
 # Shri Kshetra Brahmadev Devasthan, Kallali — Official Website
 
-Official website and digital seva portal of Shri Kshetra Brahmadev Devasthan, Kallali (Mukhed, Nanded, Maharashtra), built on a production-grade MERN stack:
+Official website and digital seva portal of Shri Kshetra Brahmadev Devasthan, Kallali (Kalhali, Kandhar, Nanded, Maharashtra · PIN: 431715), built on a production-grade MERN stack:
 
 - **MongoDB** stores donations, expenses, temple settings, admin accounts, and community photo records.
 - **Express + Node.js** API in `server/` with rate limiting, Helmet security headers, cookie sessions, Zod validation, and Cloudinary media processing.

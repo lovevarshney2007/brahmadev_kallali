@@ -8,8 +8,11 @@ import FestivalCalendar from '../components/FestivalCalendar.jsx';
 import TravelCard from '../components/TravelCard.jsx';
 import CountUpNumber from '../components/CountUpNumber.jsx';
 import HeroSlider from '../components/HeroSlider.jsx';
-
-const MAPS = 'https://www.google.com/maps/search/?api=1&query=Kallali%2C%20Kandhar%2C%20Nanded%2C%20Maharashtra';
+import {
+  TEMPLE_MAPS_SEARCH_URL,
+  TEMPLE_MAPS_DIRECTIONS_URL,
+  TEMPLE_MAPS_EMBED_URL,
+} from '../location.js';
 
 export default function Home() {
   const { settings, summary, lang, t } = useSite();
@@ -837,7 +840,7 @@ export default function Home() {
                 t.visit.travelTimeRoad,
                 isMr ? 'कंधार व मुखेडवरून कल्लाळीसाठी नियमित एसटी बसेस' : 'Regular ST buses and private autos from Kandhar/Mukhed to Kallali',
               ]}
-              mapsUrl={MAPS}
+              mapsUrl={TEMPLE_MAPS_DIRECTIONS_URL}
               mapsLabel={t.visit.mapsBtn}
             />
 
@@ -905,26 +908,41 @@ export default function Home() {
               >
                 🗺️ {t.visit.mapEmbedTitle}
               </h3>
-              <a
-                href={MAPS}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn light small"
-                style={{ textDecoration: 'none' }}
-              >
-                {t.visit.mapsBtn}
-              </a>
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+                <a
+                  href={TEMPLE_MAPS_SEARCH_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn light small"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {t.visit.mapsViewBtn}
+                </a>
+                <a
+                  href={TEMPLE_MAPS_DIRECTIONS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn primary small"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {t.visit.mapsBtn}
+                </a>
+              </div>
             </div>
             <div style={{ width: '100%', aspectRatio: '16/9', minHeight: '350px' }}>
               <iframe
-                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d125840.543212345!2d77.3048!3d19.1617!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bd6e5e5e5e5e5e5%3A0x5e5e5e5e5e5e5e5e!2sKallali%2C+Mukhed%2C+Nanded%2C+Maharashtra!5e0!3m2!1sen!2sin!4v1234567890`}
+                src={TEMPLE_MAPS_EMBED_URL}
                 width="100%"
                 height="100%"
                 style={{ border: 0, display: 'block' }}
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Shri Kshetra Brahmadev Devasthan location on Google Maps"
+                title={
+                  isMr
+                    ? 'गुगल मॅप्सवर श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी (कल्हाळी), कंधार, नांदेडचे स्थान'
+                    : 'Shri Brahmadev Devasthan, Kalhali, Kandhar, Nanded on Google Maps'
+                }
               />
             </div>
           </div>
@@ -1159,7 +1177,27 @@ export default function Home() {
                   <a href={`mailto:${c.email}`}>{c.email}</a>
                 </dd>
                 <dt>{t.contact.address}</dt>
-                <dd style={{ whiteSpace: 'pre-line' }}>{t.contact.addressVal}</dd>
+                <dd>
+                  <span style={{ whiteSpace: 'pre-line' }}>{t.contact.addressVal}</span>
+                  <div style={{ marginTop: '0.45rem', display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+                    <a
+                      href={TEMPLE_MAPS_SEARCH_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontWeight: 600 }}
+                    >
+                      📍 {t.visit.mapsViewBtn} →
+                    </a>
+                    <a
+                      href={TEMPLE_MAPS_DIRECTIONS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontWeight: 600 }}
+                    >
+                      🧭 {t.visit.mapsBtn} →
+                    </a>
+                  </div>
+                </dd>
               </dl>
 
               <div className="cols" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>

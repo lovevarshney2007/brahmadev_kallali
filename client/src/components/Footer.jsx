@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
+import { TEMPLE_MAPS_SEARCH_URL } from '../location.js';
 
 export default function Footer() {
   const { t, lang } = useSite();
@@ -41,7 +42,13 @@ export default function Footer() {
           <ul className="footer-contact-list">
             <li>
               <span className="fc-icon">📍</span>
-              <span>{isMr ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी, महाराष्ट्र' : 'Shri Kshetra Brahmadev Devasthan, Kallali, Maharashtra'}</span>
+              <span>
+                <a href={TEMPLE_MAPS_SEARCH_URL} target="_blank" rel="noopener noreferrer">
+                  {isMr
+                    ? 'श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी (कल्हाळी), कंधार, नांदेड, महाराष्ट्र - ४३१७१५'
+                    : 'Shri Kshetra Brahmadev Devasthan, Kallali (Kalhali), Kandhar, Nanded, Maharashtra - 431715'}
+                </a>
+              </span>
             </li>
             <li>
               <span className="fc-icon">📞</span>

@@ -27,7 +27,7 @@ export function createApp() {
       useDefaults: true,
       directives: {
         'script-src': ["'self'", 'https://checkout.razorpay.com'],
-        'frame-src': ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com'],
+        'frame-src': ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com', 'https://www.google.com', 'https://maps.google.com'],
         'connect-src': ["'self'", 'https://api.razorpay.com', 'https://lumberjack.razorpay.com', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
         'img-src': ["'self'", 'data:', 'https:', 'https://res.cloudinary.com'],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
