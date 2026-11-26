@@ -202,7 +202,7 @@ export default function Home() {
   const adminSlides = settings?.heroSlides;
   const heroSlides =
     adminSlides && adminSlides.length > 0
-      ? adminSlides
+      ? [...adminSlides]
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
           .map((s) => ({ image: s.imageUrl, alt: s.alt || '', title: s.title || '', caption: s.caption || '' }))
       : staticHeroSlides;
@@ -630,7 +630,7 @@ export default function Home() {
           </div>
 
           {/* Festival Calendar Component */}
-          <div style={{ marginTop: '2.5rem' }}>
+          <div style={{ marginTop: '1.25rem' }}>
             <FestivalCalendar
               festivals={festivals}
               initialMonth={new Date().getMonth()}
@@ -737,7 +737,7 @@ export default function Home() {
             <div
               className="panel"
               style={{
-                marginTop: '2rem',
+                marginTop: '1.25rem',
                 background: 'var(--card)',
                 borderRadius: '16px',
                 border: '1px solid var(--line)',
@@ -757,7 +757,7 @@ export default function Home() {
           )}
 
           {/* Action buttons */}
-          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.75rem' }}>
+          <div className="btns" style={{ justifyContent: 'center', marginTop: '1rem' }}>
             <Link to="/ledger" className="btn primary">
               {t.transparency.viewLedger}
             </Link>
@@ -779,12 +779,12 @@ export default function Home() {
           <div
             className="cols"
             style={{
-              marginBottom: '2rem',
+              marginBottom: '1rem',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             }}
           >
-            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🕉️</div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+              <div style={{ fontSize: '2.2rem', marginBottom: '.4rem' }}>🕉️</div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
                 {t.visit.templeLabel}
               </h3>
@@ -792,8 +792,8 @@ export default function Home() {
                 {t.visit.templeVal}
               </p>
             </div>
-            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>📍</div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+              <div style={{ fontSize: '2.2rem', marginBottom: '.4rem' }}>📍</div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
                 {t.visit.villageLabel}
               </h3>
@@ -801,8 +801,8 @@ export default function Home() {
                 {t.visit.villageVal}
               </p>
             </div>
-            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🏛️</div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+              <div style={{ fontSize: '2.2rem', marginBottom: '.4rem' }}>🏛️</div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
                 {t.visit.talukaLabel}
               </h3>
@@ -810,8 +810,8 @@ export default function Home() {
                 {t.visit.talukaVal}
               </p>
             </div>
-            <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '.5rem' }}>🗺️</div>
+            <div className="card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+              <div style={{ fontSize: '2.2rem', marginBottom: '.4rem' }}>🗺️</div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--heading)' }}>
                 {t.visit.districtLabel}
               </h3>
@@ -826,7 +826,7 @@ export default function Home() {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '1.5rem',
+              gap: '1.25rem',
             }}
           >
             {/* Road Travel */}
@@ -878,7 +878,7 @@ export default function Home() {
           {/* Google Maps Embed */}
           <div
             style={{
-              marginTop: '2.5rem',
+              marginTop: '1.25rem',
               borderRadius: '16px',
               overflow: 'hidden',
               border: '1px solid var(--line)',
@@ -1144,7 +1144,7 @@ export default function Home() {
             </div>
           )}
 
-          <div className="btns" style={{ justifyContent: 'center', marginTop: '1.75rem' }}>
+          <div className="btns" style={{ justifyContent: 'center', marginTop: '1rem' }}>
             <Link to="/gallery" className="btn primary">
               {t.gallery.viewAll}
             </Link>
@@ -1162,9 +1162,9 @@ export default function Home() {
             <p>{t.contact.desc}</p>
           </SectionHead>
 
-          <div className="split" style={{ alignItems: 'start', gap: '2.5rem' }}>
+          <div className="split" style={{ alignItems: 'start', gap: '1.75rem' }}>
             {/* Left: Contact Details & Quick Cards */}
-            <div style={{ display: 'grid', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gap: '1.25rem' }}>
               <dl style={{ margin: 0 }}>
                 <dt>{t.contact.person}</dt>
                 <dd>{c.person}</dd>
@@ -1217,7 +1217,7 @@ export default function Home() {
             <div
               className="card"
               style={{
-                padding: '2rem',
+                padding: '1.6rem',
                 background: 'var(--card)',
                 borderRadius: '16px',
                 border: '1px solid var(--line)',
@@ -1227,7 +1227,7 @@ export default function Home() {
               <h3 style={{ fontSize: '1.3rem', color: 'var(--heading)', marginBottom: '0.4rem' }}>
                 {t.contact.formTitle}
               </h3>
-              <p className="small muted" style={{ marginBottom: '1.25rem' }}>
+              <p className="small muted" style={{ marginBottom: '1rem' }}>
                 {t.contact.formDesc}
               </p>
 
@@ -1354,6 +1354,78 @@ export default function Home() {
                   {enquiryLoading ? t.contact.sending : t.contact.sendBtn}
                 </button>
               </form>
+            </div>
+          </div>
+
+          {/* Embedded Google Maps Location in Contact Section */}
+          <div
+            style={{
+              marginTop: '0.5rem',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              border: '1px solid var(--line)',
+              boxShadow: '0 8px 24px -8px rgba(0,0,0,.1)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--maroon-2)',
+                color: 'var(--on-dark)',
+                padding: '0.85rem 1.35rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.85rem',
+                borderBottom: '2px solid var(--gold)',
+              }}
+            >
+              <h3
+                style={{
+                  fontFamily: 'var(--display)',
+                  color: 'var(--gold-bright)',
+                  margin: 0,
+                  fontSize: '1.15rem',
+                }}
+              >
+                🗺️ {t.visit.mapEmbedTitle}
+              </h3>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <a
+                  href={TEMPLE_MAPS_SEARCH_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn light small"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {t.visit.mapsViewBtn}
+                </a>
+                <a
+                  href={TEMPLE_MAPS_DIRECTIONS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn primary small"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {t.visit.mapsBtn}
+                </a>
+              </div>
+            </div>
+            <div style={{ width: '100%', height: 'clamp(260px, 32vw, 380px)' }}>
+              <iframe
+                src={TEMPLE_MAPS_EMBED_URL}
+                width="100%"
+                height="100%"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title={
+                  isMr
+                    ? 'संपर्क - गुगल मॅप्सवर श्री क्षेत्र ब्रह्मदेव देवस्थान, कल्लाळी'
+                    : 'Contact - Shri Brahmadev Devasthan, Kallali on Google Maps'
+                }
+              />
             </div>
           </div>
         </div>

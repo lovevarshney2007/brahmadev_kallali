@@ -14,7 +14,7 @@ export default function Footer() {
 
         {/* Column 1 — About / Brand */}
         <div className="footer-col footer-brand">
-          <h3>{t.brandFull}</h3>
+          <h4 className="footer-col-title footer-brand-title">{t.brandFull}</h4>
           <p>{t.footer.desc}</p>
           <p lang="mr" style={{ fontFamily: 'var(--display)', color: 'var(--gold-bright)', marginTop: '0.5rem' }}>
             {t.footer.mantra}

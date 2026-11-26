@@ -60,7 +60,7 @@ export default function Committee() {
 
   return (
     <div className="page-committee">
-      <section className="page-top hero hero-centered" style={{ paddingBottom: '2.5rem' }}>
+      <section className="page-top hero hero-centered">
         <div className="wrap">
           <div className="head" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', justifyItems: 'center' }}>
             <span className="eyebrow" style={{ color: 'var(--gold-bright)' }}>{t.nav.committee}</span>
@@ -75,9 +75,9 @@ export default function Committee() {
       </section>
 
       {/* Trust Confirmation Notice Banner */}
-      <div style={{ background: 'var(--band)', borderBottom: '1px solid var(--line)', padding: '0.85rem 0' }}>
+      <div style={{ background: 'var(--band)', borderBottom: '1px solid var(--line)', padding: '0.45rem 0' }}>
         <div className="wrap" style={{ textAlign: 'center' }}>
-          <p className="small muted" style={{ margin: 0 }}>
+          <p className="small muted" style={{ margin: '0 auto', maxWidth: 'none', fontSize: '0.84rem', lineHeight: 1.4 }}>
             {isMr
               ? 'टीप: विश्वस्त व कार्यकारिणी सदस्यांची अधिकृत अंतिम यादी विश्वस्त मंडळाच्या मान्यतेनंतर अद्ययावत केली जात आहे.'
               : 'Note: Official trustee member names and portfolios are updated in coordination with the registered trust.'}
@@ -88,16 +88,16 @@ export default function Committee() {
       <div className="sec">
         <div className="wrap" style={{ maxWidth: '950px' }}>
           {/* Committee Cards Grid */}
-          <div style={{ marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '1.6rem', color: 'var(--heading)', marginBottom: '1.5rem', textAlign: 'center' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.6rem', color: 'var(--heading)', marginBottom: '1rem', textAlign: 'center' }}>
               {cp.leadershipTitle}
             </h2>
 
-            <div className="stagger-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            <div className="stagger-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
               {leadershipList.map((item, idx) => (
                 <div
                   key={idx}
-                  className="card reveal-on-scroll"
+                  className="card"
                   style={{
                     padding: '1.5rem',
                     background: 'var(--card)',

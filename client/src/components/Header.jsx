@@ -235,12 +235,6 @@ export default function Header() {
               </li>
 
               <li>
-                <Link to="/#visit" onClick={close}>
-                  {t.nav.visit}
-                </Link>
-              </li>
-
-              <li>
                 <NavLink to="/committee" onClick={close}>
                   {t.nav.committee}
                 </NavLink>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useSite } from '../SiteContext.jsx';
 
@@ -9,11 +9,18 @@ export default function Yatra() {
   const [tab, setTab] = useState(
     ['overview', 'schedule', 'rituals'].includes(initialTab) ? initialTab : 'overview'
   );
+  const tabsSectionRef = useRef(null);
 
   useEffect(() => {
     const qTab = searchParams.get('tab');
     if (qTab && ['overview', 'schedule', 'rituals'].includes(qTab)) {
       setTab(qTab);
+      // Scroll to tabs section after a short delay to allow render
+      setTimeout(() => {
+        if (tabsSectionRef.current) {
+          tabsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
     }
   }, [searchParams]);
 
@@ -27,7 +34,7 @@ export default function Yatra() {
 
   return (
     <div className="page-yatra">
-      <section className="page-top hero hero-centered" style={{ paddingBottom: '2.5rem' }}>
+      <section className="page-top hero hero-centered">
         <div className="wrap">
           <div className="head" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', justifyItems: 'center' }}>
             <span className="eyebrow" style={{ color: 'var(--gold-bright)' }}>{t.nav.yatraMahotsav}</span>
@@ -42,19 +49,19 @@ export default function Yatra() {
       </section>
 
       {/* Trust Notice Disclaimer Banner */}
-      <div style={{ background: 'var(--warn-bg)', borderBottom: '1px solid var(--line)', padding: '0.9rem 0' }}>
-        <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', justifyContent: 'center', textAlign: 'center' }}>
-          <span style={{ fontSize: '1.4rem' }}>ℹ️</span>
-          <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 500, color: 'var(--fg)' }}>
+      <div style={{ background: 'var(--warn-bg)', borderBottom: '1px solid var(--line)', padding: '0.5rem 0' }}>
+        <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', justifyContent: 'center', textAlign: 'center' }}>
+          <span style={{ fontSize: '1.15rem' }}>ℹ️</span>
+          <p style={{ margin: 0, maxWidth: 'none', fontSize: '0.88rem', fontWeight: 500, color: 'var(--fg)', lineHeight: 1.4 }}>
             <strong>{yp.disclaimer}</strong>
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="sec">
+      <div className="sec" ref={tabsSectionRef} style={{ scrollMarginTop: '72px' }}>
         <div className="wrap">
-          <div className="tabs" style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+          <div className="tabs" style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             <button
               type="button"
               className={`btn ${tab === 'overview' ? 'primary' : ''}`}
@@ -275,7 +282,7 @@ export default function Yatra() {
                     return (
                       <div
                         key={idx}
-                        className={`yatra-timeline-card ${isUpcomingOrLive ? 'is-live' : ''} reveal-on-scroll`}
+                        className={`yatra-timeline-card ${isUpcomingOrLive ? 'is-live' : ''}`}
                         style={{
                           position: 'relative',
                           padding: '1.25rem 1.25rem 1.25rem 3rem',

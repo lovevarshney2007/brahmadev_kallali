@@ -44,7 +44,7 @@ export default function News() {
 
   return (
     <div className="page-news">
-      <section className="page-top hero hero-centered" style={{ paddingBottom: '2.5rem' }}>
+      <section className="page-top hero hero-centered">
         <div className="wrap">
           <div className="head" style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', justifyItems: 'center' }}>
             <span className="eyebrow" style={{ color: 'var(--gold-bright)' }}>{t.nav.news}</span>
@@ -60,10 +60,10 @@ export default function News() {
 
       {/* Live Notice Banner if configured in admin */}
       {settings?.announcement && (
-        <div style={{ background: 'var(--saffron)', color: '#fff', padding: '1rem 0' }}>
-          <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', justifyContent: 'center' }}>
-            <span style={{ fontSize: '1.4rem' }}>📢</span>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem' }}>
+        <div style={{ background: 'var(--saffron)', color: '#fff', padding: '0.55rem 0' }}>
+          <div className="wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', justifyContent: 'center' }}>
+            <span style={{ fontSize: '1.15rem' }}>📢</span>
+            <p style={{ margin: 0, maxWidth: 'none', fontWeight: 600, fontSize: '0.92rem' }}>
               {settings.announcement}
             </p>
           </div>

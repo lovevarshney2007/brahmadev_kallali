@@ -17,10 +17,12 @@ export function Toran() {
     );
   }
   return (
-    <svg className="toran" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0 8 H1200" stroke="#C88A2E" strokeWidth="3" />
-      {items}
-    </svg>
+    <div className="toran-wrap" aria-hidden="true">
+      <svg className="toran" viewBox="0 0 1200 46" preserveAspectRatio="none">
+        <path d="M0 8 H1200" stroke="#C88A2E" strokeWidth="3" />
+        {items}
+      </svg>
+    </div>
   );
 }
 

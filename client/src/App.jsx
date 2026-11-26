@@ -32,7 +32,7 @@ function PageLoader() {
 
 // Scrolls to #section links and to the top on page change, or scrolls to alias sections
 function ScrollManager() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
   useEffect(() => {
     const aliasMap = {
       '/visit': 'visit',
@@ -44,26 +44,72 @@ function ScrollManager() {
     };
     const targetId = hash ? hash.slice(1) : aliasMap[pathname];
 
-    if (targetId) {
+    if (!targetId) {
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 40;
+    let pollTimer = null;
+    let resyncTimer = null;
+
+    const getDocTop = (el) => el.getBoundingClientRect().top + window.scrollY;
+
+    const scrollToTarget = () => {
+      if (cancelled) return null;
       const el = document.getElementById(targetId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+      if (!el) return null;
+
+      if (el.classList.contains('reveal-on-scroll')) {
+        el.classList.add('is-revealed');
+      }
+      el.querySelectorAll('.reveal-on-scroll').forEach((node) => {
+        node.classList.add('is-revealed');
+      });
+
+      const docTop = getDocTop(el);
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return docTop;
+    };
+
+    const tryScroll = () => {
+      if (cancelled) return;
+      const initialDocTop = scrollToTarget();
+      if (initialDocTop !== null) {
+        resyncTimer = setTimeout(() => {
+          if (cancelled) return;
+          const el = document.getElementById(targetId);
+          if (el) {
+            const newDocTop = getDocTop(el);
+            if (Math.abs(newDocTop - initialDocTop) > 40) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }, 650);
         return;
       }
-      // Retry scroll once lazy-loaded page chunk finishes rendering
-      const timer = setTimeout(() => {
-        const target = document.getElementById(targetId);
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      }, 350);
-      return () => clearTimeout(timer);
-    }
-    window.scrollTo(0, 0);
-  }, [pathname, hash]);
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        pollTimer = setTimeout(tryScroll, 80);
+      }
+    };
+
+    const raf = requestAnimationFrame(tryScroll);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      if (pollTimer) clearTimeout(pollTimer);
+      if (resyncTimer) clearTimeout(resyncTimer);
+    };
+  }, [pathname, hash, key]);
 
   // Staggered Scroll Reveal Observer
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (
-      typeof window === 'undefined' ||
       !('IntersectionObserver' in window) ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
@@ -76,55 +122,77 @@ function ScrollManager() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting || entry.boundingClientRect.top < window.innerHeight) {
             entry.target.classList.add('is-revealed');
             observer.unobserve(entry.target);
           }
         });
       },
       {
-        threshold: 0.08,
-        rootMargin: '0px 0px -30px 0px',
+        threshold: 0.01,
+        rootMargin: '80px 0px 80px 0px',
       }
     );
 
-    const scan = () => {
-      // 1. Observe elements explicitly marked with .reveal-on-scroll
-      document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)').forEach((el) => {
-        observer.observe(el);
-      });
+    const autoSelectors = [
+      'main .sec > .wrap > .head',
+      'main .sec .card',
+      'main .sec .tile',
+      'main .split > *',
+      'main .cols > *',
+      'main .photo-item',
+      'main .video-card',
+      'main .home-video-card',
+      'main .travel-card',
+      'main .fest-cal-card',
+      'main .timeline li',
+      'main .tablebox',
+      'main .committee-card',
+    ].join(', ');
 
-      // 2. Automatically observe major section and card blocks across all pages
-      const autoSelectors = [
-        'main .sec > .wrap > .head',
-        'main .sec .card',
-        'main .sec .tile',
-        'main .split > *',
-        'main .cols > *',
-        'main .photo-item',
-        'main .video-card',
-        'main .home-video-card',
-        'main .travel-card',
-        'main .fest-cal-card',
-        'main .timeline li',
-        'main .tablebox',
-        'main .committee-card'
-      ];
-      document.querySelectorAll(autoSelectors.join(', ')).forEach((el) => {
+    const revealVisible = () => {
+      const vh = window.innerHeight || 900;
+      document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)').forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.height > 0 && rect.top <= vh + 60) {
+          el.classList.add('is-revealed');
+          observer.unobserve(el);
+        }
+      });
+    };
+
+    const scan = () => {
+      document.querySelectorAll(autoSelectors).forEach((el) => {
         if (!el.classList.contains('reveal-on-scroll') && !el.classList.contains('is-revealed')) {
           el.classList.add('reveal-on-scroll');
           observer.observe(el);
         }
       });
+      document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)').forEach((el) => {
+        observer.observe(el);
+      });
+      revealVisible();
     };
 
     scan();
-    const timer1 = setTimeout(scan, 200);
-    const timer2 = setTimeout(scan, 600);
+    const mainEl = document.querySelector('main');
+    let mutObserver = null;
+    if (mainEl && 'MutationObserver' in window) {
+      mutObserver = new MutationObserver(() => {
+        scan();
+      });
+      mutObserver.observe(mainEl, { childList: true, subtree: true });
+    }
+
+    const timer1 = setTimeout(scan, 150);
+    const timer2 = setTimeout(scan, 500);
+    window.addEventListener('scroll', revealVisible, { passive: true });
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      window.removeEventListener('scroll', revealVisible);
+      if (mutObserver) mutObserver.disconnect();
       observer.disconnect();
     };
   }, [pathname]);

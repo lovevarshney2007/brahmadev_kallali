@@ -35,6 +35,13 @@ export default function HeroSlider({
   const currentIndexRef = useRef(currentIndex);
   currentIndexRef.current = currentIndex;
 
+  // Keep slide index valid when slides update asynchronously (e.g. from settings API)
+  useEffect(() => {
+    isAnimatingRef.current = false;
+    setTransitionEnabled(false);
+    setCurrentIndex(slideCount > 1 ? 1 : 0);
+  }, [slideCount]);
+
   // Active dot index mapped back to original slide array (0 to slideCount - 1)
   const activeDotIndex =
     slideCount <= 1
@@ -210,7 +217,7 @@ export default function HeroSlider({
               <img
                 src={slide.image}
                 alt={slide.alt || `Temple view ${index + 1}`}
-                loading={index <= 1 ? 'eager' : 'lazy'}
+                loading="eager"
                 className="hero-slider-image"
                 decoding="async"
               />
