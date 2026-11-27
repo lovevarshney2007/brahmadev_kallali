@@ -59,7 +59,7 @@ export default function Yatra() {
       </div>
 
       {/* Tabs */}
-      <div className="sec" ref={tabsSectionRef} style={{ scrollMarginTop: '72px' }}>
+      <div className="sec" ref={tabsSectionRef} style={{ scrollMarginTop: '48px' }}>
         <div className="wrap">
           <div className="tabs" style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             <button

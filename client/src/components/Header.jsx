@@ -25,6 +25,21 @@ export default function Header() {
   const location = useLocation();
   const navRef = useRef(null);
   const timerRef = useRef(null);
+  const headerRef = useRef(null);
+
+  // Track actual header height → CSS variable so fixed mobile nav aligns correctly
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty('--header-h', el.offsetHeight + 'px');
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
 
   // Dynamic header elevation and reading scroll progress
   useEffect(() => {
@@ -109,24 +124,17 @@ export default function Header() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, activeDropdown]);
 
-  // Lock background scroll when mobile menu is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [open]);
-
   const isAboutOpen = activeDropdown === 'about';
   const isYatraOpen = activeDropdown === 'yatra';
 
   return (
     <>
-      <header className={`site-header${isScrolled ? ' is-scrolled' : ''}`}>
+      {/* Backdrop outside header so it dims the entire page under the sticky header */}
+      {open && <div className="nav-backdrop" onClick={close} aria-hidden="true" />}
+      <header
+        ref={headerRef}
+        className={`site-header${isScrolled ? ' is-scrolled' : ''}${open ? ' nav-open' : ''}`}
+      >
         <div className="wrap header-wrap">
           {/* Brand Left */}
           <Link className="brand" to="/" onClick={close}>
@@ -138,7 +146,6 @@ export default function Header() {
           </Link>
 
           {/* Center Navigation */}
-          {open && <div className="nav-backdrop" onClick={close} aria-hidden="true" />}
           <nav
             id="mainNav"
             ref={navRef}
@@ -160,7 +167,7 @@ export default function Header() {
               >
                 <button
                   type="button"
-                  className="nav-dropdown-trigger"
+                  className={`nav-dropdown-trigger${location.pathname === '/ledger' ? ' active' : ''}`}
                   aria-expanded={isAboutOpen}
                   aria-haspopup="true"
                   onClick={() => toggleDropdown('about')}
@@ -180,9 +187,9 @@ export default function Header() {
                     </Link>
                   </li>
                   <li>
-                    <NavLink to="/ledger" onClick={close}>
+                    <Link to="/ledger" onClick={close}>
                       {t.nav.daanLedger}
-                    </NavLink>
+                    </Link>
                   </li>
                 </ul>
               </li>
@@ -195,7 +202,7 @@ export default function Header() {
               >
                 <button
                   type="button"
-                  className="nav-dropdown-trigger"
+                  className={`nav-dropdown-trigger${location.pathname === '/yatra' ? ' active' : ''}`}
                   aria-expanded={isYatraOpen}
                   aria-haspopup="true"
                   onClick={() => toggleDropdown('yatra')}
@@ -205,19 +212,19 @@ export default function Header() {
                 </button>
                 <ul className={`nav-dropdown-menu${isYatraOpen ? ' open' : ''}`}>
                   <li>
-                    <NavLink to="/yatra" end onClick={close}>
+                    <Link to="/yatra" onClick={close}>
                       {t.nav.yatraOverview}
-                    </NavLink>
+                    </Link>
                   </li>
                   <li>
-                    <NavLink to="/yatra?tab=schedule" onClick={close}>
+                    <Link to="/yatra?tab=schedule" onClick={close}>
                       {t.nav.programmeSchedule}
-                    </NavLink>
+                    </Link>
                   </li>
                   <li>
-                    <NavLink to="/yatra?tab=rituals" onClick={close}>
+                    <Link to="/yatra?tab=rituals" onClick={close}>
                       {t.nav.ritualsTraditions}
-                    </NavLink>
+                    </Link>
                   </li>
                 </ul>
               </li>
